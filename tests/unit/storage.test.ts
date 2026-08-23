@@ -7,7 +7,7 @@ describe("LocalStorageProvider", () => {
   it("joins segments under the configured root directory", () => {
     const storage = new LocalStorageProvider("/data");
     expect(storage.resolvePath("video1", "audio", "scene-01.mp3")).toBe(
-      path.join("/data", "video1", "audio", "scene-01.mp3"),
+      path.resolve("/data", "video1", "audio", "scene-01.mp3"),
     );
   });
 });

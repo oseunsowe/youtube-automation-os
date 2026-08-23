@@ -96,16 +96,21 @@ function runFfmpeg(args: string[]): Promise<void> {
 
 /** Renders each scene (visual + its own narration audio) to a clip, then concatenates them into the final MP4. */
 export async function renderWithFfmpeg(scenes: Scene[], workDir: string, outPath: string): Promise<string> {
+  // Absolute paths only: the concat demuxer resolves relative entries in the
+  // list file relative to the list file's own directory, not the process cwd.
+  const absoluteWorkDir = path.resolve(workDir);
+  const absoluteOutPath = path.resolve(outPath);
+
   const clipPaths: string[] = [];
   for (const scene of scenes) {
-    const clipPath = path.join(workDir, `${scene.id}.clip.mp4`);
+    const clipPath = path.join(absoluteWorkDir, `${scene.id}.clip.mp4`);
     await runFfmpeg(buildSceneClipArgs(scene, clipPath));
     clipPaths.push(clipPath);
   }
 
-  const concatListPath = path.join(workDir, "concat.txt");
+  const concatListPath = path.join(absoluteWorkDir, "concat.txt");
   await writeFile(concatListPath, buildConcatFileContents(clipPaths));
-  await runFfmpeg(buildConcatArgs(concatListPath, outPath));
+  await runFfmpeg(buildConcatArgs(concatListPath, absoluteOutPath));
 
-  return outPath;
+  return absoluteOutPath;
 }

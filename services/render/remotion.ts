@@ -37,8 +37,14 @@ export async function renderWithRemotion(
   workDir: string,
   outPath: string,
 ): Promise<string> {
-  const propsFilePath = path.join(workDir, "remotion-props.json");
+  // Absolute paths only: the remotion CLI is spawned with cwd=remotionProjectDir,
+  // so a relative workDir/outPath here would resolve against that directory
+  // instead of the caller's -- writing props/output to the wrong place.
+  const absoluteWorkDir = path.resolve(workDir);
+  const absoluteOutPath = path.resolve(outPath);
+
+  const propsFilePath = path.join(absoluteWorkDir, "remotion-props.json");
   await writeFile(propsFilePath, JSON.stringify({ scenes }, null, 2));
-  await runRemotion(buildRemotionRenderArgs(propsFilePath, outPath));
-  return outPath;
+  await runRemotion(buildRemotionRenderArgs(propsFilePath, absoluteOutPath));
+  return absoluteOutPath;
 }
