@@ -18,18 +18,23 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+/** Generates exactly `count` filler words, so paragraph length hits its word-count target precisely. */
+function fillerWords(count: number, title: string): string {
+  const words: string[] = [];
+  let i = 0;
+  while (words.length < count) {
+    words.push(...`detail ${i + 1} about ${title}`.split(" "));
+    i++;
+  }
+  return words.slice(0, count).join(" ");
+}
+
 function beatParagraph(
   beat: (typeof BEATS)[number],
   title: string,
   index: number,
   targetWords: number,
 ): string {
-  const filler = (n: number) =>
-    Array.from(
-      { length: n },
-      (_, i) => `detail ${i + 1} about ${title}`,
-    ).join(", ");
-
   const openers: Record<(typeof BEATS)[number], string> = {
     hook: `Something happened that no one saw coming: ${title}.`,
     setup: `To understand why, you need to know how it started.`,
@@ -40,8 +45,9 @@ function beatParagraph(
   };
 
   const base = openers[beat];
-  const padWords = Math.max(0, targetWords - wordCount(base));
-  const pad = padWords > 0 ? ` This part of the story covers ${filler(Math.ceil(padWords / 4))}.` : "";
+  const tailWordCount = wordCount(`(beat ${index + 1})`);
+  const padWords = Math.max(0, targetWords - wordCount(base) - tailWordCount);
+  const pad = padWords > 0 ? ` This part of the story covers ${fillerWords(padWords, title)}.` : "";
   return `${base}${pad} (beat ${index + 1})`;
 }
 

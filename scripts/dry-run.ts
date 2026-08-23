@@ -31,9 +31,12 @@ async function main() {
   console.log(`[dry-run] scenes: ${scenes.length}`);
 
   const outDir = path.join(env.worker.dataDir, videoId);
+  const scenesFilePath = path.join(outDir, "scenes.json");
+  const writeScenesSnapshot = () => writeFile(scenesFilePath, JSON.stringify(scenes, null, 2));
+
   await mkdir(outDir, { recursive: true });
   await writeFile(path.join(outDir, "script.json"), JSON.stringify(script, null, 2));
-  await writeFile(path.join(outDir, "scenes.json"), JSON.stringify(scenes, null, 2));
+  await writeScenesSnapshot();
 
   if (env.assets.pexelsApiKey || env.assets.pixabayApiKey) {
     scenes = await attachAssetsToScenes(
@@ -41,6 +44,7 @@ async function main() {
       { pexelsApiKey: env.assets.pexelsApiKey, pixabayApiKey: env.assets.pixabayApiKey },
       resolveAssetOutDir(env.worker.dataDir, videoId),
     );
+    await writeScenesSnapshot();
     console.log("[dry-run] assets attached");
   } else {
     console.log("[dry-run] skipped: assets (no PEXELS_API_KEY/PIXABAY_API_KEY set)");
@@ -48,6 +52,7 @@ async function main() {
 
   try {
     scenes = await generateVoiceForScenes(scenes, "en-US-AndrewNeural", resolveVoiceOutDir(env.worker.dataDir, videoId));
+    await writeScenesSnapshot();
     console.log("[dry-run] voice generated");
   } catch (err) {
     console.log(`[dry-run] skipped: voice (${(err as Error).message})`);

@@ -83,7 +83,6 @@ export async function uploadFileToResumableUrl(
       "Content-Type": "video/mp4",
       "Content-Length": String(size),
     },
-    // @ts-expect-error -- Node's fetch accepts a Readable for duplex uploads.
     duplex: "half",
     body: createReadStream(filePath),
   });
