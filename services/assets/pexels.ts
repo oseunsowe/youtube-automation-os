@@ -1,5 +1,5 @@
 export interface AssetResult {
-  provider: "pexels" | "pixabay";
+  provider: "pexels" | "pixabay" | "higgsfield";
   url: string;
   credit: string;
 }

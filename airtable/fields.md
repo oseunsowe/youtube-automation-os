@@ -32,7 +32,7 @@ See `schema.json` in this folder for the exact field list in machine-readable fo
 |---|---|---|
 | Channel | Single line text | Phase 2+ |
 | Target Word Count | Number | Derived from Target Runtime if blank |
-| Voice Provider | Single select | `edge-tts` / `piper` / `kokoro` / `elevenlabs`. Only `edge-tts` is implemented. |
+| Voice Provider | Single select | `edge-tts` / `piper` / `kokoro` / `elevenlabs`. `edge-tts` (free) is the default; `elevenlabs` (paid) is implemented but only used for a job that explicitly sets this field to it -- requires `ELEVENLABS_API_KEY` in `.env`. |
 | Voice | Single line text | e.g. `en-US-AndrewNeural` |
 | Narration Style | Single line text | Phase 2+ |
 | Narration Speed | Number | Phase 2+ |
@@ -45,8 +45,8 @@ See `schema.json` in this folder for the exact field list in machine-readable fo
 | Document Usage | Checkbox | |
 | Chart Usage | Checkbox | Routes to the image fallback -- no dedicated chart component yet |
 | Screenshot Usage | Checkbox | |
-| AI Image Usage | Checkbox | Phase 2+ |
-| AI Video Usage | Checkbox | Phase 2+ |
+| AI Image Usage | Checkbox | Off by default. When on, an AI-generated image (via Higgsfield, paid, requires `HIGGSFIELD_API_KEY`) is used **only** as a fallback for a scene where Pexels/Pixabay search comes up empty -- never the default source. |
+| AI Video Usage | Checkbox | Same as above, for video scenes. |
 | Render Provider | Single select | `remotion` / `json2video` |
 | Resolution | Single line text | Default `1920x1080` |
 | Aspect Ratio | Single line text | Default `16:9` |

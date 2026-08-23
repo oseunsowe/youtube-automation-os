@@ -12,10 +12,10 @@
   "tts": {
     "default": "edge-tts",
     "providers": {
-      "edge-tts": { "status": "implemented", "envKey": null, "cost": "free" },
+      "edge-tts": { "status": "implemented", "envKey": null, "cost": "free", "notes": "the default -- always used unless a job explicitly requests otherwise" },
       "piper": { "status": "planned", "envKey": null, "cost": "free (local)" },
       "kokoro": { "status": "planned", "envKey": null, "cost": "free (local)" },
-      "elevenlabs": { "status": "planned", "envKey": "ELEVENLABS_API_KEY", "cost": "paid" }
+      "elevenlabs": { "status": "implemented", "envKey": "ELEVENLABS_API_KEY", "cost": "paid", "notes": "opt-in only -- set the Videos record's Voice Provider to elevenlabs to use it for that job; never picked by default" }
     }
   },
   "assets": {
@@ -23,7 +23,8 @@
       "pexels": { "status": "implemented", "envKey": "PEXELS_API_KEY", "cost": "free" },
       "pixabay": { "status": "implemented", "envKey": "PIXABAY_API_KEY", "cost": "free" },
       "wikimedia": { "status": "planned", "envKey": null, "cost": "free" },
-      "archives": { "status": "planned", "envKey": null, "cost": "free", "notes": "Library of Congress / National Archives / NASA etc." }
+      "archives": { "status": "planned", "envKey": null, "cost": "free", "notes": "Library of Congress / National Archives / NASA etc." },
+      "higgsfield": { "status": "implemented", "envKey": "HIGGSFIELD_API_KEY", "cost": "paid", "notes": "AI image/video generation -- opt-in only, used only when AI Image Usage/AI Video Usage is checked AND real stock footage search comes up empty. API shape unverified, see services/assets/higgsfield.ts" }
     }
   },
   "render": {

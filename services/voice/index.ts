@@ -2,22 +2,34 @@ import { mkdir } from "node:fs/promises";
 import type { Scene } from "../common/types.js";
 import type { VoiceProvider } from "./provider.js";
 import { EdgeTtsProvider } from "./edgeTts.js";
+import { ElevenLabsProvider } from "./elevenlabsProvider.js";
 import { getAudioDurationSeconds } from "./duration.js";
 import { env } from "../common/env.js";
 import { getStorageProvider, type StorageProvider } from "../storage/index.js";
 
 export type { VoiceProvider } from "./provider.js";
 export { buildFfprobeArgs, getAudioDurationSeconds } from "./duration.js";
+export { ElevenLabsProvider } from "./elevenlabsProvider.js";
 
-export function getVoiceProvider(providerName: string = env.tts.provider): VoiceProvider {
+/**
+ * Defaults to edge-tts (free, no key) unless a job explicitly asks for
+ * something else -- elevenlabs is a paid provider, so it's only ever used
+ * when a caller passes providerName="elevenlabs" (per-job "Voice Provider"
+ * field), never picked automatically.
+ */
+export function getVoiceProvider(
+  providerName: string = env.tts.provider,
+  elevenlabsApiKey: string = env.tts.elevenlabsApiKey,
+): VoiceProvider {
   switch (providerName) {
     case "edge-tts":
       return new EdgeTtsProvider();
+    case "elevenlabs":
+      return new ElevenLabsProvider(elevenlabsApiKey);
     case "piper":
     case "kokoro":
-    case "elevenlabs":
       throw new Error(
-        `Voice provider "${providerName}" is not implemented in Phase 1 yet. Use "edge-tts".`,
+        `Voice provider "${providerName}" is not implemented in Phase 1 yet. Use "edge-tts" or "elevenlabs".`,
       );
     default:
       throw new Error(`Unknown voice provider "${providerName}"`);

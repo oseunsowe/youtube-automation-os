@@ -109,7 +109,7 @@
         "options": {} } },
     { "id": "b2n5", "name": "B2 Attach Assets", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-600, 280], "onError": "continueErrorOutput",
       "parameters": { "method": "POST", "url": "http://worker:4000/assets/attach", "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $json.scenes }) }}",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $json.scenes, visualPriorities: $('B2 Set Job Vars').item.json.visualPriorities }) }}",
         "options": {} } },
     { "id": "b2n6", "name": "B2 Set Status: Narrating", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",

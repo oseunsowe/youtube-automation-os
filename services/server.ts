@@ -68,15 +68,23 @@ app.post("/scenes/build", async (req, res) => {
 const AssetsAttachRequestSchema = z.object({
   videoId: z.string(),
   scenes: z.array(SceneSchema),
+  visualPriorities: VisualPrioritiesSchema.optional(),
 });
 
 app.post("/assets/attach", async (req, res) => {
   try {
-    const { videoId, scenes } = AssetsAttachRequestSchema.parse(req.body);
+    const { videoId, scenes, visualPriorities } = AssetsAttachRequestSchema.parse(req.body);
     const outDir = resolveAssetOutDir(videoId);
     const updated = await attachAssetsToScenes(
       scenes,
-      { pexelsApiKey: env.assets.pexelsApiKey, pixabayApiKey: env.assets.pixabayApiKey },
+      {
+        pexelsApiKey: env.assets.pexelsApiKey,
+        pixabayApiKey: env.assets.pixabayApiKey,
+        higgsfieldApiKey: env.assets.higgsfieldApiKey,
+        higgsfieldBaseUrl: env.assets.higgsfieldBaseUrl,
+        useAiImage: visualPriorities?.aiImage ?? false,
+        useAiVideo: visualPriorities?.aiVideo ?? false,
+      },
       outDir,
     );
 

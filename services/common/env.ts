@@ -27,10 +27,13 @@ export const env = {
   },
   tts: {
     provider: str("TTS_PROVIDER", "edge-tts"),
+    elevenlabsApiKey: str("ELEVENLABS_API_KEY"),
   },
   assets: {
     pexelsApiKey: str("PEXELS_API_KEY"),
     pixabayApiKey: str("PIXABAY_API_KEY"),
+    higgsfieldApiKey: str("HIGGSFIELD_API_KEY"),
+    higgsfieldBaseUrl: str("HIGGSFIELD_API_BASE_URL", "https://api.higgsfield.ai/v1"),
   },
   youtube: {
     clientId: str("YOUTUBE_CLIENT_ID"),

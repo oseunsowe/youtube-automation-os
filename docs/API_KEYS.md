@@ -23,3 +23,15 @@ Both free, sign up and grab an API key from their developer pages:
 ## edge-tts
 
 No key needed — it's a free Microsoft service. `TTS_PROVIDER=edge-tts` is the default.
+
+## ElevenLabs (optional, paid, opt-in only)
+
+Only needed if you want higher-quality narration for a specific job. It is **never used automatically** — `TTS_PROVIDER` stays `edge-tts` as the default; ElevenLabs only runs when a Videos record's `Voice Provider` field is explicitly set to `elevenlabs`.
+1. Get an API key from [elevenlabs.io](https://elevenlabs.io/app/settings/api-keys) → `ELEVENLABS_API_KEY`.
+2. Set that job's `Voice` field to a real ElevenLabs **voice ID** (not a name like `en-US-AndrewNeural` — find voice IDs under Voices in your ElevenLabs dashboard).
+
+## Higgsfield (optional, paid, opt-in only)
+
+AI-generated images/video for scenes where real stock footage search comes up empty. **Never used automatically** — only kicks in when a Videos record's `AI Image Usage`/`AI Video Usage` checkbox is on, and only as a fallback after Pexels/Pixabay search misses.
+- `HIGGSFIELD_API_KEY` from [higgsfield.ai](https://higgsfield.ai).
+- The integration (`services/assets/higgsfield.ts`) was written without an account to verify the exact API against, so double-check it works (and adjust `HIGGSFIELD_API_BASE_URL`/endpoint paths if needed) before relying on it.

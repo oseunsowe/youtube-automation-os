@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import type { MediaAsset, Scene } from "../common/types.js";
 import { searchPexelsPhoto, searchPexelsVideo, type AssetResult } from "./pexels.js";
 import { searchPixabayPhoto, searchPixabayVideo } from "./pixabay.js";
+import { generateImage, generateVideo } from "./higgsfield.js";
 import { getStorageProvider, type StorageProvider } from "../storage/index.js";
 
 export type { AssetResult } from "./pexels.js";
@@ -10,11 +11,17 @@ export type { AssetResult } from "./pexels.js";
 export interface AssetProviderKeys {
   pexelsApiKey: string;
   pixabayApiKey: string;
+  /** AI generation is a fallback used only when real footage search misses AND the operator opted in. */
+  higgsfieldApiKey?: string;
+  higgsfieldBaseUrl?: string;
+  useAiImage?: boolean;
+  useAiVideo?: boolean;
 }
 
 const KNOWN_LICENSES: Record<string, string> = {
   pexels: "Pexels License (free, no attribution required)",
   pixabay: "Pixabay License (free, no attribution required)",
+  higgsfield: "AI-generated (Higgsfield) -- verify commercial usage terms and platform AI-disclosure requirements",
 };
 
 /** Visual types that need a downloaded still/video asset rather than a rendered text card. */
@@ -25,16 +32,28 @@ async function findAsset(
   wantsVideo: boolean,
   keys: AssetProviderKeys,
 ): Promise<AssetResult | null> {
-  if (wantsVideo) {
-    return (
-      (await searchPexelsVideo(query, keys.pexelsApiKey)) ??
-      (await searchPixabayVideo(query, keys.pixabayApiKey))
-    );
+  const stockAsset = wantsVideo
+    ? (await searchPexelsVideo(query, keys.pexelsApiKey)) ?? (await searchPixabayVideo(query, keys.pixabayApiKey))
+    : (await searchPexelsPhoto(query, keys.pexelsApiKey)) ?? (await searchPixabayPhoto(query, keys.pixabayApiKey));
+
+  if (stockAsset) return stockAsset;
+
+  // Real footage is searched first (Update 6: "search real footage before
+  // generating synthetic media"); AI generation only kicks in when the
+  // operator explicitly enabled it and stock search came up empty.
+  const wantsAi = wantsVideo ? keys.useAiVideo : keys.useAiImage;
+  if (!wantsAi || !keys.higgsfieldApiKey) return null;
+
+  try {
+    const higgsfieldOptions = {
+      apiKey: keys.higgsfieldApiKey,
+      baseUrl: keys.higgsfieldBaseUrl ?? "https://api.higgsfield.ai/v1",
+    };
+    return wantsVideo ? await generateVideo(query, higgsfieldOptions) : await generateImage(query, higgsfieldOptions);
+  } catch (err) {
+    console.warn(`[assets] Higgsfield generation failed for "${query}": ${(err as Error).message}`);
+    return null;
   }
-  return (
-    (await searchPexelsPhoto(query, keys.pexelsApiKey)) ??
-    (await searchPixabayPhoto(query, keys.pixabayApiKey))
-  );
 }
 
 async function downloadTo(url: string, filePath: string, fetchImpl: typeof fetch = fetch): Promise<void> {

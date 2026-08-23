@@ -42,9 +42,10 @@ Per TODO.md's Update 11, the pipeline pauses twice rather than running fully una
 ## Render, voice, and storage provider abstraction
 
 - **Render** (`services/render/index.ts`, `RENDER_PROVIDER`): prefers **Remotion** (`renderer/remotion/`) for richer, componentized scenes (Ken Burns pans, quote cards, captions) and automatically falls back to a plain **ffmpeg** pipeline if Remotion/Chromium isn't available; **JSON2Video** (`services/render/json2video.ts`) is a hosted alternative using the same Scene JSON.
-- **Voice** (`services/voice/provider.ts`, `TTS_PROVIDER`): `edge-tts` is implemented; `piper`/`kokoro`/`elevenlabs` are registered-but-not-implemented.
+- **Voice** (`services/voice/provider.ts`, `TTS_PROVIDER`): `edge-tts` (free) is the default and always used unless a job explicitly overrides it; `elevenlabs` (`services/voice/elevenlabsProvider.ts`, paid) is implemented but opt-in only, via a job's `Voice Provider` field. `piper`/`kokoro` are registered-but-not-implemented.
 - **Storage** (`services/storage/`, `STORAGE_PROVIDER`): `local` is implemented; `google_drive`/`r2`/`s3` are registered-but-not-implemented. Every module resolves paths through this rather than joining `DATA_DIR` directly, so switching backends later doesn't mean touching call sites.
 - **LLM** (`services/llm/provider.ts`, `LLM_PROVIDER`): `gemini` and `mock` are implemented; `openai`/`anthropic`/`ollama` are registered-but-not-implemented.
+- **AI-generated assets** (`services/assets/higgsfield.ts`): image/video generation, opt-in only via the `AI Image Usage`/`AI Video Usage` toggles (default off) and used only as a fallback when Pexels/Pixabay search finds nothing for a scene -- per Update 6, "search real footage before generating synthetic media." API shape unverified against Higgsfield's real docs (no account to test against).
 
 `config/providers.json` documents the full set (including stock asset providers `pexels`/`pixabay` implemented, `wikimedia`/`archives` planned) for humans.
 
