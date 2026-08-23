@@ -1,5 +1,6 @@
 {
   "name": "YouTube Automation OS",
+  "initializeCommand": "bash -c 'test -f .env || cp .env.example .env'",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "worker",
   "workspaceFolder": "/app",

@@ -31,6 +31,7 @@ services:
       - WORKER_PORT=4000
       - DATA_DIR=/data
     volumes:
+      - .:/app
       - worker_data:/data
 
 volumes:

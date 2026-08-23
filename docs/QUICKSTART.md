@@ -6,23 +6,21 @@ This repo is meant to run inside a **GitHub Codespace** (or any machine with Doc
 
 ## 1. Open in a Codespace
 
-From the repo's GitHub page: **Code → Codespaces → Create codespace on main**. The `.devcontainer/devcontainer.json` brings up two containers automatically (n8n and the worker API) via `docker-compose.yml`.
+From the repo's GitHub page: **Code → Codespaces → Create codespace on main**. `.devcontainer/devcontainer.json` runs `docker-compose.yml` automatically, bringing up two containers (n8n and the worker API), and its `initializeCommand` auto-creates `.env` from `.env.example` if you don't already have one (Compose needs `.env` to exist just to start, even with empty values).
 
-If you'd rather run locally with Docker Desktop instead of Codespaces, `docker compose up --build` from the repo root does the same thing.
+If you'd rather run locally with Docker Desktop instead of Codespaces, `cp .env.example .env` once yourself, then `docker compose up --build` from the repo root does the same thing.
 
 ## 2. Configure secrets
 
-```bash
-cp .env.example .env
-```
-
-Fill in at minimum:
+`.env` already exists (step 1 created it with empty values). Open it and fill in at minimum:
 - `AIRTABLE_API_KEY`, `AIRTABLE_BASE_ID` (see `airtable/fields.md` for how to create the base)
 - `GEMINI_API_KEY` (free tier — [aistudio.google.com](https://aistudio.google.com/apikey))
 - `PEXELS_API_KEY` and/or `PIXABAY_API_KEY` (both free)
 - `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET` / `YOUTUBE_REFRESH_TOKEN` (see `docs/API_KEYS.md`)
 
 Leave `LLM_PROVIDER=gemini` and `TTS_PROVIDER=edge-tts` (the Phase 1 defaults), or set `LLM_PROVIDER=mock` to test the pipeline without any LLM key.
+
+The containers already started with the empty `.env` from step 1, and `env_file` values are only read at container start — after filling in real keys, restart the stack so they take effect: **Dev Containers: Rebuild Container** from the command palette (or `docker compose restart` in the terminal).
 
 ## 3. Install and test the worker logic
 

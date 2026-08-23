@@ -12,16 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-COPY package.json ./
-COPY services/package.json services/package.json
-COPY renderer/remotion/package.json renderer/remotion/package.json
-RUN npm install
-
-COPY . .
-RUN npm run build --workspace services
-
-ENV NODE_ENV=production
 EXPOSE 4000
 
-CMD ["node", "services/dist/server.js"]
+# The repo is bind-mounted over /app at container start (see docker-compose.yml)
+# so devcontainer edits are reflected live; install/build happens on start
+# against that live source rather than a copy baked in at image-build time.
+CMD ["sh", "-c", "npm install && npm run build --workspace services && node services/dist/server.js"]
