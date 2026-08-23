@@ -1,11 +1,12 @@
 {
-  "note": "Reference schema for manual Airtable base setup (Phase 1 scope only). See airtable/fields.md for step-by-step creation instructions.",
+  "note": "Reference schema for manual Airtable base setup. See airtable/fields.md for step-by-step creation instructions. Fields marked \"Phase 2+\" are stored/reserved but not yet driving pipeline behavior beyond what's noted.",
   "tables": [
     {
       "name": "Videos",
       "primaryField": "Title",
       "fields": [
         { "name": "Title", "type": "singleLineText", "required": true },
+        { "name": "Channel", "type": "singleLineText", "notes": "Phase 2+ (multi-channel support not implemented yet)" },
         {
           "name": "Category",
           "type": "singleSelect",
@@ -16,26 +17,78 @@
           "type": "singleSelect",
           "options": [
             "Start",
-            "Researching",
             "Script Review",
             "Generating Assets",
             "Narrating",
             "Rendering",
-            "QC Required",
-            "Ready to Publish",
-            "Scheduled",
+            "Final Review",
             "Published",
             "Failed"
           ],
-          "default": "Idea"
+          "default": "Start"
         },
-        { "name": "Scene Count", "type": "number", "precision": 0 },
+        { "name": "Target Runtime", "type": "number", "precision": 0, "notes": "target runtime in minutes" },
+        { "name": "Target Word Count", "type": "number", "precision": 0, "notes": "optional; derived from Target Runtime if blank" },
+
+        { "name": "Voice Provider", "type": "singleSelect", "options": ["edge-tts", "piper", "kokoro", "elevenlabs"], "default": "edge-tts" },
         { "name": "Voice", "type": "singleLineText", "default": "en-US-AndrewNeural" },
+        { "name": "Narration Style", "type": "singleLineText", "notes": "Phase 2+ (not yet fed into prompt/voice tuning)" },
+        { "name": "Narration Speed", "type": "number", "notes": "Phase 2+ (not yet applied to TTS)" },
+
         { "name": "Visual Style", "type": "singleLineText", "default": "documentary" },
-        { "name": "Default Runtime", "type": "number", "precision": 0, "notes": "target runtime in minutes" },
+        { "name": "Scene Density", "type": "singleSelect", "options": ["low", "medium", "high"], "default": "medium" },
+        { "name": "Average Scene Duration", "type": "number", "notes": "seconds; overrides Scene Density's default if set" },
+        { "name": "Stock Footage Priority", "type": "checkbox", "default": true },
+        { "name": "Archive Priority", "type": "checkbox", "default": true },
+        { "name": "Map Usage", "type": "checkbox", "default": false, "notes": "routes to image fallback -- no dedicated map component yet" },
+        { "name": "Document Usage", "type": "checkbox", "default": false },
+        { "name": "Chart Usage", "type": "checkbox", "default": false, "notes": "routes to image fallback -- no dedicated chart component yet" },
+        { "name": "Screenshot Usage", "type": "checkbox", "default": false },
+        { "name": "AI Image Usage", "type": "checkbox", "default": false, "notes": "Phase 2+ (no AI image generation implemented yet)" },
+        { "name": "AI Video Usage", "type": "checkbox", "default": false, "notes": "Phase 2+ (no AI video generation implemented yet)" },
+
+        { "name": "Render Provider", "type": "singleSelect", "options": ["remotion", "json2video"], "default": "remotion" },
+        { "name": "Resolution", "type": "singleLineText", "default": "1920x1080" },
+        { "name": "Aspect Ratio", "type": "singleLineText", "default": "16:9" },
+        { "name": "Background Music", "type": "checkbox", "default": false, "notes": "Phase 2+ (not implemented yet)" },
+        { "name": "Caption Style", "type": "singleLineText", "notes": "Phase 2+ (captions not yet rendered)" },
+
+        { "name": "Research Depth", "type": "singleSelect", "options": ["none", "basic", "deep"], "default": "none", "notes": "Phase 3 (research agent not implemented yet)" },
+        { "name": "Require Script Approval", "type": "checkbox", "default": true },
+        { "name": "Require Final Approval", "type": "checkbox", "default": true },
+        { "name": "Script", "type": "multilineText", "notes": "human-readable narration, filled in when Status becomes Script Review" },
+        { "name": "Script JSON", "type": "multilineText", "notes": "machine-readable Script object; read back by the orchestrator once Script Approved is checked" },
+        { "name": "Script Approved", "type": "checkbox", "default": false },
+        { "name": "Final Video Approved", "type": "checkbox", "default": false },
+        { "name": "Auto Publish", "type": "checkbox", "default": false, "notes": "Phase 2+ (upload always runs today once Final Video Approved is checked)" },
+        { "name": "Auto Repurpose", "type": "checkbox", "default": false, "notes": "Phase 2+ (repurposing not implemented yet)" },
+        { "name": "Publish Date", "type": "dateTime", "notes": "Phase 2+ (scheduling not implemented yet -- upload happens immediately on approval)" },
+        { "name": "Priority", "type": "number", "notes": "Phase 2+ (not yet used to order the job queue)" },
+
+        { "name": "Scene Count", "type": "number", "precision": 0 },
         { "name": "Render URL/Path", "type": "singleLineText" },
         { "name": "YouTube ID", "type": "singleLineText" },
-        { "name": "Published At", "type": "dateTime" }
+        { "name": "Published At", "type": "dateTime" },
+        { "name": "Retry Count", "type": "number", "precision": 0, "default": 0 },
+        { "name": "Failed Stage", "type": "singleLineText" }
+      ]
+    },
+    {
+      "name": "Media Assets",
+      "primaryField": "Asset ID",
+      "notes": "Source/copyright ledger -- one row per downloaded stock/archival asset (Update 7).",
+      "fields": [
+        { "name": "Asset ID", "type": "autoNumber" },
+        { "name": "Video", "type": "multipleRecordLinks", "linkedTable": "Videos" },
+        { "name": "Scene ID", "type": "singleLineText" },
+        { "name": "Source Provider", "type": "singleLineText" },
+        { "name": "Source URL", "type": "url" },
+        { "name": "Creator", "type": "singleLineText" },
+        { "name": "License", "type": "singleLineText" },
+        { "name": "Attribution", "type": "singleLineText" },
+        { "name": "Download Date", "type": "dateTime" },
+        { "name": "Local Path", "type": "singleLineText" },
+        { "name": "Usage Status", "type": "singleSelect", "options": ["approved", "review_required"], "default": "approved" }
       ]
     },
     {

@@ -1,8 +1,24 @@
 {
   "runtimeMinutes": 5,
+  "voiceProvider": "edge-tts",
   "voice": "en-US-AndrewNeural",
   "visualStyle": "documentary",
-  "renderEngine": "remotion",
+  "sceneDensity": "medium",
+  "renderProvider": "remotion",
+  "storageProvider": "local",
+  "topicMode": "manual",
+  "visualPriorities": {
+    "stockFootage": true,
+    "archive": true,
+    "map": false,
+    "document": false,
+    "chart": false,
+    "screenshot": false,
+    "aiImage": false,
+    "aiVideo": false
+  },
+  "requireScriptApproval": true,
+  "requireFinalApproval": true,
   "youtube": {
     "privacyStatus": "private",
     "categoryId": "27"

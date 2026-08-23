@@ -2,28 +2,31 @@
 
 An importable, configurable automation pipeline for documentary-style, faceless YouTube channels:
 
-`Airtable (control panel) -> n8n (orchestration) -> AI script -> scene plan -> stock assets -> TTS narration -> Remotion/FFmpeg render -> YouTube upload`
+`Airtable (control panel) -> n8n (orchestration, 2 human approval gates) -> AI script -> scene plan -> stock assets -> TTS narration -> Remotion/FFmpeg/JSON2Video render -> YouTube upload`
 
-Full roadmap and design rationale: [`TODO.md`](TODO.md). Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Setup: [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
+Full roadmap and design rationale: [`TODO.md`](TODO.md) (see §27 for the second-pass architecture review). Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Setup: [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
 
-## Phase 1 status
+## Status
 
-This is the **Phase 1** minimum working clone (`TODO.md` §7): prove `Airtable -> n8n -> script -> scenes -> narration -> rendered video -> YouTube upload` end to end, before adding research/fact-checking, competitor intelligence, or analytics.
+**Phase 1** (`TODO.md` §7) plus the architecture refinements from a second reference-automation review (`TODO.md` §27): `Airtable -> n8n (script approval -> scenes/assets/voice/render -> final approval) -> YouTube upload`, with pluggable LLM/voice/render/storage providers, a runtime-derived scene count, and a source/copyright ledger. Research/fact-checking, competitor intelligence, and analytics remain later sprints (`TODO.md` §23).
 
-Built and unit-tested (`npm test`, offline — mock LLM provider, mocked HTTP):
-- `services/llm` — Gemini + deterministic mock provider, category-aware prompts (`prompts/`)
-- `services/scenes` — script → scene-plan splitter
-- `services/assets` — Pexels/Pixabay search + download
-- `services/voice` — edge-tts narration per scene, real-duration probing via ffprobe
-- `services/render` — Remotion renderer with an ffmpeg-only fallback
+Built and unit-tested (`npm test`, offline — mock LLM provider, mocked HTTP; **37+ tests passing, verified locally**):
+- `services/llm` — Gemini (retries once on malformed output) + deterministic mock provider, category-aware prompts (`prompts/`)
+- `services/scenes` — script → scene-plan splitter, targeting a runtime-derived scene count and routing visual types through configurable priorities
+- `services/assets` — Pexels/Pixabay search + download, full source/copyright ledger
+- `services/voice` — provider abstraction (`edge-tts` implemented; piper/kokoro/elevenlabs registered), narration per scene, real-duration probing via ffprobe
+- `services/render` — provider abstraction (Remotion with ffmpeg fallback, plus JSON2Video), same Scene JSON regardless of engine
+- `services/storage` — provider abstraction (`local` implemented; google_drive/r2/s3 registered)
 - `services/youtube` — resumable upload via OAuth refresh token
-- `services/airtable` — REST client + status/job mapping
+- `services/airtable` — REST client, expanded production-config field mapping, Media Assets ledger writer
 - `renderer/remotion` — the actual Remotion composition/scene components
-- `n8n/` — the orchestrator workflow + one standalone workflow per stage
-- `airtable/` — schema + manual setup instructions (no API-created base on the free plan)
+- `n8n/` — the orchestrator (three approval-gated branches) + one standalone workflow per stage
+- `airtable/` — schema (Videos, Media Assets, Errors) + manual setup instructions (no API-created base on the free plan)
 - `docker-compose.yml` / `Dockerfile.worker` / `.devcontainer/` — Codespaces-first deployment
 
-**Not yet verified end to end** — this repo was built on a machine with no Docker, ffmpeg, or Python available, so `docker compose up`, n8n workflow import, real Remotion/ffmpeg rendering, and a real Airtable-triggered run all still need to happen once, in a Codespace or any Docker host. `docs/QUICKSTART.md` walks through exactly that, including a "Known gaps to verify" section for the couple of integration points (the `msedge-tts` call shape, Remotion's Chromium deps in Docker, exact n8n node schema) that couldn't be checked against a live instance from here.
+**Verified locally** (no Docker needed): `npm install && npm run build && npm test` — all green — and `npm run dry-run` with `LLM_PROVIDER=mock`, which produced real edge-tts narration audio end to end.
+
+**Not yet verified**: `docker compose up`, n8n workflow import against a live instance, real Remotion/ffmpeg/JSON2Video rendering, and the two-approval-gate flow end to end. `docs/QUICKSTART.md`'s "Known gaps to verify" section covers the couple of integration points that couldn't be checked against live services from here.
 
 ## Quickstart
 
@@ -36,7 +39,7 @@ npm run validate:n8n
 docker compose up --build
 ```
 
-Then see [`docs/QUICKSTART.md`](docs/QUICKSTART.md) for importing the n8n workflows and running the acceptance test.
+Then see [`docs/QUICKSTART.md`](docs/QUICKSTART.md) for importing the n8n workflows and running the acceptance test (including approving the script and the final render).
 
 ## Repository layout
 

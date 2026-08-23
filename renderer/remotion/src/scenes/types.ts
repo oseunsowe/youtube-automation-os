@@ -5,6 +5,9 @@ export const SceneVisualType = z.enum([
   "image",
   "title",
   "quote",
+  "document",
+  "screenshot",
+  "headline",
 ]);
 export type SceneVisualType = z.infer<typeof SceneVisualType>;
 
@@ -17,5 +20,9 @@ export const SceneSchema = z.object({
   assetPath: z.string().optional(),
   audioPath: z.string().optional(),
   overlayText: z.string().optional(),
+  /** Ken Burns style hint; "static" disables pan/zoom. */
+  motion: z.string().optional(),
+  /** Scene-to-scene transition hint; stored but not yet rendered (deferred). */
+  transition: z.string().optional(),
 });
 export type Scene = z.infer<typeof SceneSchema>;

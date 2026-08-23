@@ -1,12 +1,7 @@
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import path from "node:path";
+import type { VoiceProvider } from "./provider.js";
 
-/**
- * msedge-tts's exact method surface could not be verified against installed
- * types in this environment (no disk space for `npm install` locally) —
- * re-verify this call against node_modules/msedge-tts once installed in the
- * Codespace; see docs/TROUBLESHOOTING notes in QUICKSTART.md.
- */
 export async function synthesizeToFile(
   text: string,
   voice: string,
@@ -22,4 +17,12 @@ export async function synthesizeToFile(
     await fs.rename(audioFilePath, target);
   }
   return target;
+}
+
+export class EdgeTtsProvider implements VoiceProvider {
+  readonly name = "edge-tts";
+
+  synthesizeToFile(text: string, voice: string, outDir: string, fileName: string): Promise<string> {
+    return synthesizeToFile(text, voice, outDir, fileName);
+  }
 }

@@ -59,4 +59,30 @@ describe("GeminiLLMProvider", () => {
       provider.generateScript({ title: "Test", category: "history", runtimeMinutes: 1 }),
     ).rejects.toThrow(/empty script/);
   });
+
+  it("retries once and succeeds if the second attempt returns a usable script", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ candidates: [] }), text: async () => "" })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ candidates: [{ content: { parts: [{ text: "A usable paragraph." }] } }] }),
+        text: async () => "",
+      }) as unknown as typeof fetch;
+
+    const provider = new GeminiLLMProvider("test-key", "gemini-2.0-flash", fetchImpl);
+    const script = await provider.generateScript({ title: "Test", category: "history", runtimeMinutes: 1 });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(script.script).toBe("A usable paragraph.");
+  });
+
+  it("gives up after two consecutive failed attempts", async () => {
+    const fetchImpl = mockFetch({ candidates: [] });
+    const provider = new GeminiLLMProvider("test-key", "gemini-2.0-flash", fetchImpl);
+    await expect(
+      provider.generateScript({ title: "Test", category: "history", runtimeMinutes: 1 }),
+    ).rejects.toThrow(/empty script/);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
 });

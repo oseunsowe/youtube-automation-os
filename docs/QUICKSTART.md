@@ -50,17 +50,19 @@ See `docs/N8N.md` for what each workflow does and how the error-handling branche
 
 ## 6. Run the Phase 1 acceptance test
 
-1. Open your Airtable base → Videos table → add a row: `Title`, `Category` = one of `financial-crime`/`dark-business`/`mysteries`/`history`/`ai-tech`, `Default Runtime` = `1` (for a fast first test).
+1. Open your Airtable base → Videos table → add a row: `Title`, `Category` = one of `financial-crime`/`dark-business`/`mysteries`/`history`/`ai-tech`, `Target Runtime` = `1` (for a fast first test).
 2. Set `Status` = `Start`.
-3. Open n8n → activate **00 - Master Orchestrator** (or run it manually once to test without waiting for the schedule).
-4. Watch the Videos row's `Status` progress: `Narrating` → `Rendering` → `Ready to Publish` → `Published`.
-5. Confirm `Render URL/Path` points at a playable MP4 inside the worker's `/data` volume, and `YouTube ID` is set.
+3. Open n8n → activate **00 - Master Orchestrator**.
+4. Within a minute, `Status` becomes `Script Review` and `Script` fills in with the generated narration. Read it, then check `Script Approved`.
+5. Within a minute, the pipeline runs scenes → assets → narration → render (`Status` passes through `Narrating` → `Rendering`), then becomes `Final Review` with `Render URL/Path` pointing at a playable MP4 inside the worker's `/data` volume. Watch it, then check `Final Video Approved`.
+6. Within a minute, it uploads to YouTube and `Status` becomes `Published` with `YouTube ID` set.
 
-If a step fails, `Status` becomes `Failed` and a row appears in the `Errors` table with the message — fix the cause and set `Status` back to `Start` to retry.
+If a step fails, `Status` becomes `Failed`, `Failed Stage` records which branch (`script`/`production`/`publish`), and a row appears in the `Errors` table with the message — fix the cause and set `Status` back to `Start` to retry. A record whose `Retry Count` has already hit 3 is skipped by B1's search formula rather than retried forever unattended.
 
 ## Known gaps to verify in the Codespace
 
 These were written and unit-tested for their logic, but couldn't be exercised end-to-end on the machine this was built on (no Docker/ffmpeg/Chromium/API keys there):
-- `services/voice/edgeTts.ts` calls the `msedge-tts` npm package's `setMetadata`/`toFile` API from memory — re-check its signature against the installed package if voice generation errors.
-- Remotion rendering needs Chromium; `Dockerfile.worker` installs a standard dependency set, but Remotion's Docker requirements do shift between versions — see [Remotion's Docker guide](https://www.remotion.dev/docs/docker) if `/render` fails with a browser-launch error. The `ffmpeg` engine (`"engine": "ffmpeg"` in the `/render` request) is a Chromium-free fallback.
+- `services/voice/edgeTts.ts` calls the `msedge-tts` npm package's `setMetadata`/`toFile` API — this one *has* been verified locally via `npm run dry-run` with `LLM_PROVIDER=mock` and produced real narration audio, so it should just work.
+- Remotion rendering needs Chromium; `Dockerfile.worker` installs a standard dependency set, but Remotion's Docker requirements do shift between versions — see [Remotion's Docker guide](https://www.remotion.dev/docs/docker) if `/render` fails with a browser-launch error. The `ffmpeg` engine (`"engine": "ffmpeg"` in the `/render` request) is a Chromium-free fallback; `json2video` is a third option if you have a JSON2Video API key.
 - The n8n workflow JSON was authored to n8n's current (2024+) node schema (`httpRequest` v4.2, `airtable` v2.1, dual main/error outputs via `onError: continueErrorOutput`). If a node shows as unrecognized after import, rebuild just that node in the n8n UI using the method/URL/body shown in the JSON — none of the actual logic lives in n8n, so this doesn't block the pipeline.
+- `services/render/json2video.ts` was written from general knowledge of JSON2Video's REST API without an account to verify against -- re-check it against their docs before relying on `RENDER_PROVIDER=json2video`.

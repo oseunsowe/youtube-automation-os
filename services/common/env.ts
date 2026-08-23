@@ -15,6 +15,8 @@ export const env = {
     apiKey: str("AIRTABLE_API_KEY"),
     baseId: str("AIRTABLE_BASE_ID"),
     videosTable: str("AIRTABLE_VIDEOS_TABLE", "Videos"),
+    mediaAssetsTable: str("AIRTABLE_MEDIA_ASSETS_TABLE", "Media Assets"),
+    errorsTable: str("AIRTABLE_ERRORS_TABLE", "Errors"),
   },
   llm: {
     provider: str("LLM_PROVIDER", "mock"),
@@ -34,6 +36,16 @@ export const env = {
     clientId: str("YOUTUBE_CLIENT_ID"),
     clientSecret: str("YOUTUBE_CLIENT_SECRET"),
     refreshToken: str("YOUTUBE_REFRESH_TOKEN"),
+  },
+  render: {
+    provider: str("RENDER_PROVIDER", "remotion"),
+    json2videoApiKey: str("JSON2VIDEO_API_KEY"),
+  },
+  storage: {
+    provider: str("STORAGE_PROVIDER", "local"),
+  },
+  topic: {
+    mode: str("TOPIC_MODE", "manual"),
   },
   worker: {
     port: Number(str("WORKER_PORT", "4000")),

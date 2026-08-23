@@ -21,14 +21,33 @@
   "assets": {
     "providers": {
       "pexels": { "status": "implemented", "envKey": "PEXELS_API_KEY", "cost": "free" },
-      "pixabay": { "status": "implemented", "envKey": "PIXABAY_API_KEY", "cost": "free" }
+      "pixabay": { "status": "implemented", "envKey": "PIXABAY_API_KEY", "cost": "free" },
+      "wikimedia": { "status": "planned", "envKey": null, "cost": "free" },
+      "archives": { "status": "planned", "envKey": null, "cost": "free", "notes": "Library of Congress / National Archives / NASA etc." }
     }
   },
   "render": {
     "default": "remotion",
     "engines": {
       "remotion": { "status": "implemented", "requires": "Chromium (Docker/Codespace)" },
-      "ffmpeg": { "status": "implemented", "requires": "ffmpeg binary", "notes": "fallback when Remotion/Chromium isn't available" }
+      "ffmpeg": { "status": "implemented", "requires": "ffmpeg binary", "notes": "automatic fallback when Remotion/Chromium isn't available" },
+      "json2video": { "status": "implemented", "envKey": "JSON2VIDEO_API_KEY", "cost": "paid", "notes": "same Scene JSON, hosted rendering -- see services/render/json2video.ts" }
+    }
+  },
+  "storage": {
+    "default": "local",
+    "providers": {
+      "local": { "status": "implemented", "envKey": null, "cost": "free" },
+      "google_drive": { "status": "planned", "envKey": null, "cost": "free tier" },
+      "r2": { "status": "planned", "envKey": null, "cost": "free tier" },
+      "s3": { "status": "planned", "envKey": null, "cost": "paid" }
+    }
+  },
+  "topicMode": {
+    "default": "manual",
+    "modes": {
+      "manual": { "status": "implemented", "notes": "operator types a title" },
+      "discovery": { "status": "planned", "notes": "Opportunity Engine -- Sprint 4 (competitor intelligence, breakout detection)" }
     }
   }
 }

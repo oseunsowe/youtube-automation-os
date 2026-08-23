@@ -3,8 +3,11 @@ import { mkdir } from "node:fs/promises";
 import type { Scene } from "../common/types.js";
 import { renderWithRemotion } from "./remotion.js";
 import { renderWithFfmpeg } from "./ffmpeg.js";
+import { renderWithJson2Video } from "./json2video.js";
+import { env } from "../common/env.js";
+import { getStorageProvider, type StorageProvider } from "../storage/index.js";
 
-export type RenderEngine = "remotion" | "ffmpeg";
+export type RenderEngine = "remotion" | "ffmpeg" | "json2video";
 
 export interface RenderResult {
   outPath: string;
@@ -12,18 +15,25 @@ export interface RenderResult {
 }
 
 /**
- * Renders the final MP4, preferring Remotion (richer scene components) and
- * automatically falling back to the plain FFmpeg pipeline if Remotion/Chromium
- * isn't available in the current environment (e.g. no Docker/Codespace).
+ * Renders the final MP4 via the configured RENDER_PROVIDER (Update 3).
+ * "remotion" prefers Remotion's richer scene components and automatically
+ * falls back to the plain FFmpeg pipeline if Remotion/Chromium isn't
+ * available (e.g. no Docker/Codespace). "json2video" uses the same Scene
+ * JSON against the JSON2Video API instead -- see services/render/json2video.ts.
  */
 export async function renderVideo(
   scenes: Scene[],
   workDir: string,
   outPath: string,
-  preferredEngine: RenderEngine = "remotion",
+  preferredEngine: RenderEngine = env.render.provider as RenderEngine,
 ): Promise<RenderResult> {
   await mkdir(workDir, { recursive: true });
   await mkdir(path.dirname(outPath), { recursive: true });
+
+  if (preferredEngine === "json2video") {
+    await renderWithJson2Video(scenes, outPath, { apiKey: env.render.json2videoApiKey });
+    return { outPath, engine: "json2video" };
+  }
 
   if (preferredEngine === "remotion") {
     try {
@@ -38,9 +48,9 @@ export async function renderVideo(
   return { outPath, engine: "ffmpeg" };
 }
 
-export function resolveRenderPaths(dataDir: string, videoId: string) {
+export function resolveRenderPaths(videoId: string, storage: StorageProvider = getStorageProvider()) {
   return {
-    workDir: path.join(dataDir, videoId, "render-work"),
-    outPath: path.join(dataDir, videoId, "output", "final.mp4"),
+    workDir: storage.resolvePath(videoId, "render-work"),
+    outPath: storage.resolvePath(videoId, "output", "final.mp4"),
   };
 }

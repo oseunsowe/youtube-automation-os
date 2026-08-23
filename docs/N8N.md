@@ -1,4 +1,4 @@
-# n8n Workflows (Phase 1)
+# n8n Workflows
 
 All six workflows in `n8n/` call the same worker API (`services/server.ts`) over HTTP — see `docs/ARCHITECTURE.md` for why they're intentionally thin.
 
@@ -6,7 +6,7 @@ All six workflows in `n8n/` call the same worker API (`services/server.ts`) over
 
 | File | Purpose |
 |---|---|
-| `00-master-orchestrator.json` | The real pipeline: polls Airtable every minute for `Status = Start`, runs every stage in order, updates `Status` after each stage, and routes failures to a Failed status + Errors record. **Import and activate this one.** |
+| `00-master-orchestrator.json` | The real pipeline, as three independently-triggered branches off one schedule (see below). **Import and activate this one.** |
 | `06-script-writer.json` | Standalone: calls `/script/generate` alone with a sample title/category, for testing that one stage. |
 | `07-scene-builder.json` | Standalone: calls `/scenes/build` then `/assets/attach` with a sample script. |
 | `09-voice-generator.json` | Standalone: calls `/voice/generate` with sample scenes. |
@@ -14,6 +14,16 @@ All six workflows in `n8n/` call the same worker API (`services/server.ts`) over
 | `13-youtube-publisher.json` | Standalone: calls `/youtube/upload` with a sample file path. |
 
 Run the standalone ones manually (the "Manual Test" trigger node) while developing/debugging a single stage, without waiting on the full orchestrator loop.
+
+## The three orchestrator branches (two human-approval gates)
+
+`00-master-orchestrator.json` doesn't run start-to-finish in one execution. It fans out from one Schedule Trigger into three independent branches, each with its own Airtable search/loop/error-handling, so a job can sit paused at an approval gate indefinitely without holding an n8n execution open:
+
+- **B1 (`Status='Start'`, and `Retry Count < 3`)** — generates the script, writes it to the `Script`/`Script JSON` fields, sets `Status='Script Review'`. Stops. A human reads `Script` and checks `Script Approved`.
+- **B2 (`Status='Script Review'` AND `Script Approved`)** — reads `Script JSON` back, builds scenes, attaches assets, generates narration, renders, sets `Status='Final Review'` with `Render URL/Path` filled in. Stops. A human watches the render and checks `Final Video Approved`.
+- **B3 (`Status='Final Review'` AND `Final Video Approved`)** — uploads to YouTube, sets `Status='Published'`.
+
+Each branch polls independently every minute, so a record just sits at `Script Review`/`Final Review` until its checkbox is checked -- nothing times out or needs to be re-triggered manually.
 
 ## Setup after import
 
@@ -23,7 +33,7 @@ Run the standalone ones manually (the "Manual Test" trigger node) while developi
 
 ## Error handling
 
-Every HTTP Request node in `00-master-orchestrator.json` has `"onError": "continueErrorOutput"`, giving it two outputs: the normal one (success) and an error one. All five error outputs converge on `Build Error Fields -> Set Status: Failed -> Log Error Record -> ` (back into the loop, so one failed job doesn't stop the batch). This is what satisfies "errors are visible and retryable" — a failed row shows `Status = Failed` plus a row in `Errors` with the message; fix the cause and set `Status` back to `Start`.
+Every HTTP Request node has `"onError": "continueErrorOutput"`, giving it two outputs: the normal one (success) and an error one. Within each branch, every error output converges on that branch's `Build Error Fields -> Set Status: Failed -> Log Error` (back into that branch's loop, so one failed job doesn't stop the batch). A failed row shows `Status = Failed`, `Failed Stage` (`script` / `production` / `publish`), and `Retry Count` incremented, plus a row in `Errors` with the message. Fix the cause and set `Status` back to `Start` to retry -- B1's search formula skips rows whose `Retry Count` has already reached 3, so a job doesn't retry forever unattended (Update 9's "maximum retry count").
 
 If your n8n version doesn't expose the error output for a node (older n8n releases used a plain "Continue On Fail" checkbox instead), enable that checkbox on the node instead — the downstream wiring still works the same way.
 

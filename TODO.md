@@ -51,6 +51,38 @@ Architecture principle:
 
 > One production engine, five category profiles.
 
+Core design principle (added after reviewing a second reference automation, see §27):
+
+> The system should have the simplicity of the reference automation but the production depth of a documentary studio.
+
+Operator experience:
+
+```text
+Choose topic
+Choose category
+Click Start
+Review script
+Review video
+Publish
+```
+
+Backend complexity:
+
+```text
+Research
+Fact checking
+Story architecture
+Scene direction
+Asset sourcing
+Narration
+Rendering
+QC
+Publishing
+Analytics
+```
+
+The operator should never need to understand all backend nodes just to produce a video.
+
 ---
 
 # 2. What We Will Keep From the Reference System
@@ -138,6 +170,33 @@ This matters because documentary content needs stronger factual reliability, bet
                                   ▼
                             Learning Loop
 ```
+
+## Airtable is the primary operator interface
+
+The operator normally interacts with only this:
+
+```text
+Airtable
+   ↓
+n8n
+   ↓
+Production System
+```
+
+Supabase (once introduced) operates in the background only, when actually needed:
+
+```text
+                 ┌──── Supabase
+                 │
+Airtable → n8n ──┼──── Agents
+                 │
+                 └──── Storage / Analytics
+```
+
+- Airtable stays the main production dashboard, source of human-facing status/approvals, and the content queue.
+- The operator is never required to open Supabase to create or approve a video.
+- Supabase, when it's added (not implemented yet), is for structured backend data: competitor datasets, analytics history, cached research, source records, large scene datasets, asset metadata, embeddings/vector search if introduced, learning-loop data.
+- n8n synchronizes Airtable and Supabase where required, rather than the operator doing so manually.
 
 ---
 
@@ -479,6 +538,8 @@ Fields:
 
 ## Table 8 — Videos
 
+> This is the full, north-star schema across every phase. What's actually built and wired up in Phase 1 is a subset — see `airtable/schema.json` and `airtable/fields.md` for the exact implemented fields (they also include a `Media Assets` table, Table 12 below, and the two approval checkboxes).
+
 Fields:
 
 - Video ID
@@ -499,19 +560,38 @@ Fields:
 - Published At
 - QC Status
 
-Statuses:
+Expanded production-config fields (added after reviewing a second reference automation — Update 2, §27; implemented in Phase 1 as flat Airtable columns, see `airtable/fields.md`):
 
-- Ready
-- Researching
-- Script Review
-- Generating Assets
-- Narrating
-- Rendering
-- QC Required
-- Ready to Publish
-- Scheduled
-- Published
-- Failed
+- **Basic**: Target Runtime, Target Word Count
+- **Narration**: Voice Provider, Narration Style, Narration Speed
+- **Visual Production**: Scene Density, Average Scene Duration, Stock Footage Priority, Archive Priority, Map Usage, Document Usage, Chart Usage, Screenshot Usage, AI Image Usage, AI Video Usage
+- **Rendering**: Render Provider, Resolution, Aspect Ratio, Background Music, Caption Style
+- **Automation**: Research Depth, Require Script Approval, Require Final Approval, Script Approved, Final Video Approved, Auto Publish, Auto Repurpose, Publish Date, Priority
+- **Failure tracking**: Retry Count, Failed Stage
+
+Full status state machine (Update 14; Phase 1 implements the subset in bold — see `airtable/schema.json`):
+
+- IDEA
+- SCORING
+- AWAITING TOPIC APPROVAL
+- RESEARCHING
+- FACT CHECKING
+- STORY BUILDING
+- SCRIPTING (**Start**)
+- **SCRIPT REVIEW**
+- SCENE PLANNING (**Generating Assets**)
+- ASSET COLLECTION
+- **NARRATING**
+- **RENDERING**
+- AUTOMATED QC
+- FINAL REVIEW (**Final Review**)
+- READY TO PUBLISH
+- SCHEDULED
+- **PUBLISHED**
+- REPURPOSING
+- COMPLETE
+
+Failure state: **FAILED**, with `failed_stage`, `error_message` (stored as the `Errors` table's `Message`), `retry_count`.
 
 ---
 
@@ -563,6 +643,26 @@ Fields:
 - Retry Count
 - Timestamp
 - Resolved
+
+---
+
+## Table 12 — Media Assets
+
+Source/copyright ledger (Update 7, §27) — one row per downloaded stock/archival asset, implemented in Phase 1.
+
+Fields:
+
+- Asset ID
+- Video (link to Videos)
+- Scene ID
+- Source Provider
+- Source URL
+- Creator
+- License
+- Attribution
+- Download Date
+- Local Path
+- Usage Status (`approved` / `review_required`)
 
 ---
 
@@ -1204,6 +1304,10 @@ The MVP is complete when:
 14. Airtable reflects every stage.
 15. Errors are visible and retryable.
 
+Revised/confirmed after reviewing a second reference automation (Update 17, §27) — the MVP does **not** require: automatic trend discovery, TikTok/Instagram/Facebook publishing, full analytics learning, multiple channels. Those are Phase 2+.
+
+Phase 1 implementation status against this list (see `TODO.md` §27 for the full patch and triage): items 1-9, 13-15 are built and locally verified (unit tests + a real `npm run dry-run`, including real edge-tts audio). Item 6 (script approval) and 12 (final approval) are built as the two n8n orchestrator gates (§27, Update 11) but not yet run against a live n8n instance. Item 10 (render) works via ffmpeg/Remotion, also not yet verified live. Item 11 (QC) and the "research packet is generated" criterion from Update 17 are **not implemented** — QC and the research agent remain Sprint 2/3 work per §23.
+
 ---
 
 # 25. Version 2 Definition
@@ -1246,3 +1350,143 @@ First prove:
 > Airtable → n8n → script → scenes → narration → rendered video
 
 Once that path works reliably, add intelligence upstream and publishing/analytics downstream.
+
+---
+
+# 27. Reference Automation Review — Applied Updates
+
+After Phase 1 (§7-§26) was built and locally verified, a second automation reference was reviewed. Its patch is reproduced in full below for traceability, followed by what was actually implemented vs. deferred in this pass.
+
+## Triage: Implemented vs Deferred (this pass)
+
+**Implemented:**
+- **Update 2** — Videos table expanded with the full production-config field set (§6 Table 8, `airtable/schema.json`, `services/common/types.ts#ProductionConfig`).
+- **Update 3** — `RENDER_PROVIDER` (`remotion` / `ffmpeg` / `json2video`); JSON2Video adapter in `services/render/json2video.ts` (unverified against a real account — see `docs/QUICKSTART.md`).
+- **Update 4** — Structured JSON was already true at every worker HTTP boundary (zod). Added: Gemini retries once on an empty/malformed response (`services/llm/gemini.ts`); Research/Story-Architect JSON *schemas* for later phases (`services/common/agentSchemas.ts`) — no agent built behind them yet.
+- **Update 5** — `services/scenes/splitter.ts` now targets a runtime-derived scene count (Scene Density: low/medium/high, ~12s/8s/5s average) via sentence-level regrouping, instead of one scene per script paragraph.
+- **Update 6 (partial)** — Visual router added `document`/`screenshot`/`headline` types and routes scenes through the Videos record's priority toggles. Map/chart route to the plain image renderer — no dedicated components yet (still Phase 2, §8).
+- **Update 7** — Full source/copyright ledger: `Media Assets` table (§6 Table 12), `services/assets/index.ts#scenesToMediaAssets`, `services/airtable/index.ts#recordMediaAsset`, written automatically after `/assets/attach`.
+- **Update 9 (partial)** — `Retry Count` + `Failed Stage` fields; B1's Airtable search formula skips records whose `Retry Count` has already reached 3. Full per-scene resumable retry is deferred (needs a resumable render pipeline).
+- **Update 10 / 13** — Voice provider abstraction (`services/voice/provider.ts`, `edge-tts` implemented, `piper`/`kokoro`/`elevenlabs` registered-not-implemented); storage abstraction (`services/storage/`, `local` implemented, `google_drive`/`r2`/`s3` registered-not-implemented); `wikimedia`/`archives` registered as planned stock providers.
+- **Update 11** — Two human approval gates, implemented as three independently-polling n8n orchestrator branches (`n8n/00-master-orchestrator.json`, `docs/N8N.md`).
+- **Update 14 (subset)** — `Script Review`/`Final Review` states added to the working status enum (§6 Table 8 shows the full 19-state chain with the implemented subset in bold).
+- **Update 15** — `TOPIC_MODE=manual|discovery` config flag; `discovery` registered-not-implemented.
+- **Update 18** — Core design principle added near the top of this document (§1).
+- **Updates 1, 12, 16** — Documentation-only; reflected in §3's "Airtable is the primary operator interface" note and `docs/ARCHITECTURE.md`/`docs/AIRTABLE.md`. No Supabase code exists yet — nothing to change.
+- **Update 17** — MVP criteria cross-checked against the current build; see the note under §24.
+
+**Explicitly deferred** (still Sprint 2/3+ per §23, unchanged by this patch): full Update 6 visual components (map/chart/timeline/document-zoom), Update 8's 13-subworkflow split (the existing worker-API-centric thin-n8n design already gives independently-testable stages with structured input/output — see `docs/ARCHITECTURE.md` — a literal file-per-stage split would mean empty shells for research/fact-check/story-architect/QC/repurposer/analytics, which don't have logic behind them yet), full Update 9 per-scene resumable retry, Update 15's discovery-mode Opportunity Engine, Update 17's "research packet is generated" MVP item (research agent itself is still Sprint 3).
+
+None of this has been run against a live n8n/Docker instance yet — see `docs/QUICKSTART.md`'s "Known gaps to verify" section.
+
+## Full patch as reviewed
+
+> Reproduced verbatim from `TODO.md — Required Updates After Reference Video Review.md` for traceability. Do not re-apply — see the triage above for what's already done.
+
+### UPDATE 1 — Airtable Is the Primary Operator Interface
+
+Applied — see §3 "Airtable is the primary operator interface."
+
+### UPDATE 2 — Expand Airtable Production Configuration
+
+Applied — see §6 Table 8.
+
+### UPDATE 3 — Add Render Provider Abstraction
+
+Applied — see `config/providers.json` and `services/render/`.
+
+### UPDATE 4 — Formalize Structured JSON Between Every AI Agent
+
+Applied where an agent exists; schemas reserved for Research/Story Architect. Agent JSON contracts:
+
+```json
+// Research Agent
+{
+  "topic": "", "thesis": "", "timeline": [], "people": [], "organizations": [],
+  "claims": [], "financial_figures": [], "sources": [], "visual_opportunities": []
+}
+// Story Architect
+{
+  "central_question": "", "hook": "", "acts": [], "open_loops": [], "reveal": "", "ending": ""
+}
+// Script Writer
+{
+  "title": "", "hook": "", "chapters": [], "script": "", "word_count": 0, "estimated_runtime": 0
+}
+// Scene Director
+{
+  "scenes": [{ "scene_number": 1, "narration": "", "duration": 0, "visual_type": "", "search_query": "",
+    "asset_source": "", "motion": "", "overlay": "", "transition": "", "citation": "" }]
+}
+```
+
+Add: JSON schema validation, retry malformed outputs, reject missing required fields, log invalid AI responses, never pass raw prose directly between agents.
+
+### UPDATE 5 — Replace Fixed Scene Counts With Documentary Scene Density
+
+Applied — see `services/scenes/splitter.ts`. Production targets used: 5min → 25-50 visual changes, 10min → 45-90, 15min → 70-130, 20min → 90-170 (targets, not hard limits).
+
+### UPDATE 6 — Add a Documentary Visual Router
+
+Partially applied. Full router: Stock Video, Archive Video, Historical Photo, Company Photo, Screenshot, Document, Court Filing, Map, Chart, Timeline, Headline, Motion Graphic, AI Image, AI Video. Search real footage before generating synthetic media; use AI-generated media as supporting material, not the default; add fallback rules; prevent excessive reuse of identical assets; match visuals directly to narration.
+
+### UPDATE 7 — Add Source and Copyright Ledger
+
+Applied — see §6 Table 12 and `services/assets/`.
+
+### UPDATE 8 — Split Large n8n Workflow Into Subworkflows
+
+Deferred — see triage above for why.
+
+```text
+00 Master Orchestrator
+├── 01 Topic Intelligence   ├── 02 Research         ├── 03 Fact Check
+├── 04 Story Architect      ├── 05 Script Writer     ├── 06 Scene Director
+├── 07 Asset Manager        ├── 08 Voice             ├── 09 Renderer
+├── 10 QC                   ├── 11 Publisher         ├── 12 Repurposer
+└── 13 Analytics
+```
+
+### UPDATE 9 — Add Resume / Retry Logic
+
+Partially applied — see triage above.
+
+### UPDATE 10 — Add Provider Abstraction Beyond Rendering
+
+Applied — LLM/Voice/Storage/Render/Stock provider registries, see `config/providers.json`.
+
+### UPDATE 11 — Add Two Human Approval Gates
+
+Applied — see `n8n/00-master-orchestrator.json`, `docs/N8N.md`.
+
+### UPDATE 12 — Keep Social Distribution Out of Sprint 1
+
+Already true — no social integration exists yet. Build order unchanged, see §23.
+
+### UPDATE 13 — Add Storage Abstraction
+
+Applied — see `services/storage/`.
+
+### UPDATE 14 — Improve Status State Machine
+
+Applied (subset) — see §6 Table 8.
+
+### UPDATE 15 — Separate Topic Modes
+
+Applied (manual only; discovery registered-not-implemented) — see `config/providers.json`, `.env.example`.
+
+### UPDATE 16 — Clarify Supabase's Role
+
+Applied — see §3.
+
+### UPDATE 17 — Revised MVP Acceptance Criteria
+
+Applied — see the note under §24.
+
+### UPDATE 18 — New Core Design Principle
+
+Applied — see §1.
+
+### DO NOT CHANGE THESE EXISTING DECISIONS
+
+Kept: n8n as orchestration engine, Airtable, Supabase availability, FFmpeg, Remotion, local/free TTS first, free stock/archive sources, five category profiles, competitor intelligence, topic opportunity scoring, research agent, fact checker, analytics learning loop, human QC, free-first cost strategy. The changes above refine the implementation rather than replacing the current architecture.

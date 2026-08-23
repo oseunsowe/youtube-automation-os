@@ -42,7 +42,7 @@ async function main() {
     scenes = await attachAssetsToScenes(
       scenes,
       { pexelsApiKey: env.assets.pexelsApiKey, pixabayApiKey: env.assets.pixabayApiKey },
-      resolveAssetOutDir(env.worker.dataDir, videoId),
+      resolveAssetOutDir(videoId),
     );
     await writeScenesSnapshot();
     console.log("[dry-run] assets attached");
@@ -51,7 +51,7 @@ async function main() {
   }
 
   try {
-    scenes = await generateVoiceForScenes(scenes, "en-US-AndrewNeural", resolveVoiceOutDir(env.worker.dataDir, videoId));
+    scenes = await generateVoiceForScenes(scenes, "en-US-AndrewNeural", resolveVoiceOutDir(videoId));
     await writeScenesSnapshot();
     console.log("[dry-run] voice generated");
   } catch (err) {
@@ -61,7 +61,7 @@ async function main() {
   const allScenesHaveAudio = scenes.every((s) => s.audioPath);
   if (allScenesHaveAudio) {
     try {
-      const { workDir, outPath } = resolveRenderPaths(env.worker.dataDir, videoId);
+      const { workDir, outPath } = resolveRenderPaths(videoId);
       const result = await renderVideo(scenes, workDir, outPath, "ffmpeg");
       console.log(`[dry-run] rendered via ${result.engine} -> ${result.outPath}`);
     } catch (err) {

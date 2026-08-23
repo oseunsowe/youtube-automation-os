@@ -33,7 +33,7 @@ export class GeminiLLMProvider implements LLMProvider {
     }
   }
 
-  async generateScript(request: ScriptRequest): Promise<Script> {
+  private async requestScriptText(request: ScriptRequest): Promise<string> {
     const targetWordCount = Math.max(
       150,
       Math.round(request.runtimeMinutes * WORDS_PER_MINUTE),
@@ -75,6 +75,25 @@ export class GeminiLLMProvider implements LLMProvider {
     const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
     if (!text.trim()) {
       throw new Error("Gemini returned an empty script");
+    }
+    return text;
+  }
+
+  /** Retries once on a malformed/empty response before giving up (Update 4). */
+  async generateScript(request: ScriptRequest): Promise<Script> {
+    let text: string | undefined;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < 2 && text === undefined; attempt++) {
+      try {
+        text = await this.requestScriptText(request);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (text === undefined) {
+      throw lastError instanceof Error ? lastError : new Error(String(lastError));
     }
 
     const paragraphs = text

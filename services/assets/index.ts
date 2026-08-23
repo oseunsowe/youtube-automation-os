@@ -1,8 +1,9 @@
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
-import type { Scene } from "../common/types.js";
+import type { MediaAsset, Scene } from "../common/types.js";
 import { searchPexelsPhoto, searchPexelsVideo, type AssetResult } from "./pexels.js";
 import { searchPixabayPhoto, searchPixabayVideo } from "./pixabay.js";
+import { getStorageProvider, type StorageProvider } from "../storage/index.js";
 
 export type { AssetResult } from "./pexels.js";
 
@@ -10,6 +11,14 @@ export interface AssetProviderKeys {
   pexelsApiKey: string;
   pixabayApiKey: string;
 }
+
+const KNOWN_LICENSES: Record<string, string> = {
+  pexels: "Pexels License (free, no attribution required)",
+  pixabay: "Pixabay License (free, no attribution required)",
+};
+
+/** Visual types that need a downloaded still/video asset rather than a rendered text card. */
+const ASSET_BACKED_TYPES = new Set(["stock_video", "image", "document", "screenshot"]);
 
 async function findAsset(
   query: string,
@@ -45,7 +54,7 @@ export async function attachAssetsToScenes(
 
   const results: Scene[] = [];
   for (const scene of scenes) {
-    if (scene.visualType !== "stock_video" && scene.visualType !== "image") {
+    if (!ASSET_BACKED_TYPES.has(scene.visualType)) {
       results.push(scene);
       continue;
     }
@@ -70,11 +79,34 @@ export async function attachAssetsToScenes(
       assetPath: filePath,
       assetProvider: asset.provider,
       assetCredit: asset.credit,
+      assetSourceUrl: asset.url,
+      assetLicense: KNOWN_LICENSES[asset.provider] ?? "Unknown -- requires manual license review",
+      assetUsageStatus: KNOWN_LICENSES[asset.provider] ? "approved" : "review_required",
     });
   }
   return results;
 }
 
-export function resolveAssetOutDir(dataDir: string, videoId: string): string {
-  return path.join(dataDir, videoId, "assets");
+export function resolveAssetOutDir(videoId: string, storage: StorageProvider = getStorageProvider()): string {
+  return storage.resolvePath(videoId, "assets");
+}
+
+/** Builds one Media Assets ledger record per downloaded asset (Update 7), skipping scenes with no asset. */
+export function scenesToMediaAssets(scenes: Scene[], videoId: string): MediaAsset[] {
+  return scenes
+    .filter((scene): scene is Scene & { assetPath: string; assetSourceUrl: string } =>
+      Boolean(scene.assetPath && scene.assetSourceUrl),
+    )
+    .map((scene) => ({
+      assetId: `${videoId}-${scene.id}`,
+      sceneId: scene.id,
+      videoId,
+      sourceProvider: scene.assetProvider ?? "unknown",
+      sourceUrl: scene.assetSourceUrl,
+      license: scene.assetLicense ?? "Unknown -- requires manual license review",
+      attribution: scene.assetCredit ?? "",
+      downloadDate: new Date().toISOString(),
+      localPath: scene.assetPath,
+      usageStatus: scene.assetUsageStatus ?? "review_required",
+    }));
 }

@@ -7,9 +7,10 @@ import { Caption } from "./Caption";
 export const ImageScene: React.FC<{ scene: Scene }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const scale = interpolate(frame, [0, durationInFrames], [1, 1.12], {
-    extrapolateRight: "clamp",
-  });
+  const isStatic = scene.motion === "static";
+  const scale = isStatic
+    ? 1
+    : interpolate(frame, [0, durationInFrames], [1, 1.12], { extrapolateRight: "clamp" });
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>

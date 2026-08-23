@@ -2,345 +2,295 @@
   "name": "00 - Master Orchestrator",
   "nodes": [
     {
-      "id": "n1-schedule",
+      "id": "trigger",
       "name": "Every Minute",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-1600, 0],
+      "position": [-1800, 400],
       "parameters": {
         "rule": { "interval": [{ "field": "minutes", "minutesInterval": 1 }] }
       }
     },
-    {
-      "id": "n2-find-jobs",
-      "name": "Find Jobs (Status=Start)",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [-1360, 0],
+
+    { "id": "b1n1", "name": "B1 Find New Jobs", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, -300],
       "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "search",
+        "authentication": "airtableTokenApi", "operation": "search",
         "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "filterByFormula": "={Status}='Start'",
+        "filterByFormula": "=AND({Status}='Start', OR({Retry Count}='', {Retry Count}<3))",
         "options": {}
       },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
     },
-    {
-      "id": "n3-loop",
-      "name": "Loop Over Jobs",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [-1120, 0],
-      "parameters": { "batchSize": 1, "options": {} }
-    },
-    {
-      "id": "n4-job-vars",
-      "name": "Build Job Vars",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [-880, -120],
-      "parameters": {
-        "mode": "manual",
-        "assignments": {
-          "assignments": [
-            { "name": "videoId", "type": "string", "value": "={{ $json.id }}" },
-            { "name": "title", "type": "string", "value": "={{ $json.fields.Title }}" },
-            { "name": "category", "type": "string", "value": "={{ $json.fields.Category }}" },
-            { "name": "runtimeMinutes", "type": "number", "value": "={{ $json.fields['Default Runtime'] || 5 }}" },
-            { "name": "voice", "type": "string", "value": "={{ $json.fields.Voice || 'en-US-AndrewNeural' }}" }
-          ]
-        }
-      }
-    },
-    {
-      "id": "n5-script",
-      "name": "Generate Script",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [-640, -120],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "method": "POST",
-        "url": "http://worker:4000/script/generate",
-        "sendBody": true,
-        "specifyBody": "json",
+    { "id": "b1n2", "name": "B1 Loop New Jobs", "type": "n8n-nodes-base.splitInBatches", "typeVersion": 3, "position": [-1320, -300],
+      "parameters": { "batchSize": 1, "options": {} } },
+    { "id": "b1n3", "name": "B1 Set Job Vars", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-1080, -420],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "videoId", "type": "string", "value": "={{ $json.id }}" },
+        { "name": "title", "type": "string", "value": "={{ $json.fields.Title }}" },
+        { "name": "category", "type": "string", "value": "={{ $json.fields.Category }}" },
+        { "name": "runtimeMinutes", "type": "number", "value": "={{ $json.fields['Target Runtime'] || 5 }}" },
+        { "name": "retryCount", "type": "number", "value": "={{ $json.fields['Retry Count'] || 0 }}" }
+      ] } } },
+    { "id": "b1n4", "name": "B1 Generate Script", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-840, -420], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/script/generate", "sendBody": true, "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: $json.title, category: $json.category, runtimeMinutes: $json.runtimeMinutes }) }}",
-        "options": {}
-      }
-    },
-    {
-      "id": "n6-scenes",
-      "name": "Build Scenes",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [-400, -120],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "method": "POST",
-        "url": "http://worker:4000/scenes/build",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ script: $json.script }) }}",
-        "options": {}
-      }
-    },
-    {
-      "id": "n7-assets",
-      "name": "Attach Assets",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [-160, -120],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "method": "POST",
-        "url": "http://worker:4000/assets/attach",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('Build Job Vars').item.json.videoId, scenes: $json.scenes }) }}",
-        "options": {}
-      }
-    },
-    {
-      "id": "n8-status-narrating",
-      "name": "Set Status: Narrating",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [80, -120],
-      "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "update",
+        "options": {} } },
+    { "id": "b1n5", "name": "B1 Prepare Script Fields", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-600, -420],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "scriptJson", "type": "string", "value": "={{ JSON.stringify($json.script) }}" },
+        { "name": "scriptText", "type": "string", "value": "={{ $json.script.script }}" }
+      ] } } },
+    { "id": "b1n6", "name": "B1 Set Status: Script Review", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, -420],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": {
-          "value": {
-            "id": "={{ $('Build Job Vars').item.json.videoId }}",
-            "Status": "Narrating",
-            "Scene Count": "={{ $json.scenes.length }}"
-          }
-        },
-        "options": {}
-      },
-      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
-    },
-    {
-      "id": "n9-voice",
-      "name": "Generate Voice",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [320, -120],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "method": "POST",
-        "url": "http://worker:4000/voice/generate",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('Build Job Vars').item.json.videoId, scenes: $json.scenes, voice: $('Build Job Vars').item.json.voice }) }}",
-        "options": {}
-      }
-    },
-    {
-      "id": "n10-status-rendering",
-      "name": "Set Status: Rendering",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [560, -120],
-      "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "update",
+        "columns": { "value": {
+          "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
+          "Status": "Script Review",
+          "Script": "={{ $json.scriptText }}",
+          "Script JSON": "={{ $json.scriptJson }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b1e1", "name": "B1 Build Error Fields", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-840, -180],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "message", "type": "string", "value": "={{ $json.error || $json.message || 'Unknown error' }}" }
+      ] } } },
+    { "id": "b1e2", "name": "B1 Set Status: Failed", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, -180],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": {
-          "value": { "id": "={{ $('Build Job Vars').item.json.videoId }}", "Status": "Rendering" }
-        },
-        "options": {}
-      },
-      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
-    },
-    {
-      "id": "n11-render",
-      "name": "Render Video",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [800, -120],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "method": "POST",
-        "url": "http://worker:4000/render",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('Build Job Vars').item.json.videoId, scenes: $json.scenes, engine: 'remotion' }) }}",
-        "options": { "timeout": 1800000 }
-      }
-    },
-    {
-      "id": "n12-status-ready",
-      "name": "Set Status: Ready to Publish",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [1040, -120],
-      "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
-        "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": {
-          "value": {
-            "id": "={{ $('Build Job Vars').item.json.videoId }}",
-            "Status": "Ready to Publish",
-            "Render URL/Path": "={{ $json.outPath }}"
-          }
-        },
-        "options": {}
-      },
-      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
-    },
-    {
-      "id": "n13-upload",
-      "name": "Upload To YouTube",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1280, -120],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "method": "POST",
-        "url": "http://worker:4000/youtube/upload",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ filePath: $json['Render URL/Path'] || $json.outPath, title: $('Build Job Vars').item.json.title, description: '', privacyStatus: 'private' }) }}",
-        "options": { "timeout": 1800000 }
-      }
-    },
-    {
-      "id": "n14-status-published",
-      "name": "Set Status: Published",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [1520, -220],
-      "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
-        "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": {
-          "value": {
-            "id": "={{ $('Build Job Vars').item.json.videoId }}",
-            "Status": "Published",
-            "YouTube ID": "={{ $json.youtubeId }}",
-            "Published At": "={{ $now.toISO() }}"
-          }
-        },
-        "options": {}
-      },
-      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
-    },
-    {
-      "id": "n15-error-fields",
-      "name": "Build Error Fields",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [80, 220],
-      "parameters": {
-        "mode": "manual",
-        "assignments": {
-          "assignments": [
-            { "name": "message", "type": "string", "value": "={{ $json.error || $json.message || 'Unknown error' }}" }
-          ]
-        }
-      }
-    },
-    {
-      "id": "n16-mark-failed",
-      "name": "Set Status: Failed",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [320, 220],
-      "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
-        "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": {
-          "value": { "id": "={{ $('Build Job Vars').item.json.videoId }}", "Status": "Failed" }
-        },
-        "options": {}
-      },
-      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
-    },
-    {
-      "id": "n17-log-error",
-      "name": "Log Error Record",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.1,
-      "position": [560, 220],
-      "parameters": {
-        "authentication": "airtableTokenApi",
-        "operation": "create",
+        "columns": { "value": {
+          "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
+          "Status": "Failed",
+          "Failed Stage": "script",
+          "Retry Count": "={{ ($('B1 Set Job Vars').item.json.retryCount || 0) + 1 }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b1e3", "name": "B1 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, -180],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "create",
         "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
-        "columns": {
-          "value": {
-            "Workflow": "00 - Master Orchestrator",
-            "Video/Record": "={{ $('Build Job Vars').item.json.videoId }}",
-            "Message": "={{ $json.message }}",
-            "Timestamp": "={{ $now.toISO() }}",
-            "Resolved": false
-          }
-        },
-        "options": {}
-      },
-      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } }
-    }
+        "columns": { "value": {
+          "Workflow": "00 - Master Orchestrator (B1 Start)",
+          "Video/Record": "={{ $('B1 Set Job Vars').item.json.videoId }}",
+          "Message": "={{ $json.message }}",
+          "Timestamp": "={{ $now.toISO() }}",
+          "Resolved": false
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b2n1", "name": "B2 Find Approved Scripts", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, 400],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "search",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "filterByFormula": "=AND({Status}='Script Review', {Script Approved}=1)",
+        "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b2n2", "name": "B2 Loop Approved Scripts", "type": "n8n-nodes-base.splitInBatches", "typeVersion": 3, "position": [-1320, 400],
+      "parameters": { "batchSize": 1, "options": {} } },
+    { "id": "b2n3", "name": "B2 Set Job Vars", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-1080, 280],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "videoId", "type": "string", "value": "={{ $json.id }}" },
+        { "name": "title", "type": "string", "value": "={{ $json.fields.Title }}" },
+        { "name": "voice", "type": "string", "value": "={{ $json.fields.Voice || 'en-US-AndrewNeural' }}" },
+        { "name": "voiceProvider", "type": "string", "value": "={{ $json.fields['Voice Provider'] || 'edge-tts' }}" },
+        { "name": "sceneDensity", "type": "string", "value": "={{ $json.fields['Scene Density'] || 'medium' }}" },
+        { "name": "averageSceneDurationSeconds", "type": "number", "value": "={{ $json.fields['Average Scene Duration'] || null }}" },
+        { "name": "renderProvider", "type": "string", "value": "={{ $json.fields['Render Provider'] || 'remotion' }}" },
+        { "name": "retryCount", "type": "number", "value": "={{ $json.fields['Retry Count'] || 0 }}" },
+        { "name": "script", "type": "object", "value": "={{ JSON.parse($json.fields['Script JSON']) }}" },
+        { "name": "visualPriorities", "type": "object", "value": "={{ { stockFootage: $json.fields['Stock Footage Priority'] !== false, archive: $json.fields['Archive Priority'] !== false, map: !!$json.fields['Map Usage'], document: !!$json.fields['Document Usage'], chart: !!$json.fields['Chart Usage'], screenshot: !!$json.fields['Screenshot Usage'], aiImage: !!$json.fields['AI Image Usage'], aiVideo: !!$json.fields['AI Video Usage'] } }}" }
+      ] } } },
+    { "id": "b2n4", "name": "B2 Build Scenes", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-840, 280], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/scenes/build", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ script: $json.script, sceneDensity: $json.sceneDensity, averageSceneDurationSeconds: $json.averageSceneDurationSeconds, visualPriorities: $json.visualPriorities }) }}",
+        "options": {} } },
+    { "id": "b2n5", "name": "B2 Attach Assets", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-600, 280], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/assets/attach", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $json.scenes }) }}",
+        "options": {} } },
+    { "id": "b2n6", "name": "B2 Set Status: Narrating", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 280],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": {
+          "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "Status": "Narrating",
+          "Scene Count": "={{ $json.scenes.length }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b2n7", "name": "B2 Generate Voice", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-120, 280], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/voice/generate", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $('B2 Attach Assets').item.json.scenes, voice: $('B2 Set Job Vars').item.json.voice, voiceProvider: $('B2 Set Job Vars').item.json.voiceProvider }) }}",
+        "options": {} } },
+    { "id": "b2n8", "name": "B2 Set Status: Rendering", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [120, 280],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": { "id": "={{ $('B2 Set Job Vars').item.json.videoId }}", "Status": "Rendering" } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b2n9", "name": "B2 Render Video", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [360, 280], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/render", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $('B2 Generate Voice').item.json.scenes, engine: $('B2 Set Job Vars').item.json.renderProvider }) }}",
+        "options": { "timeout": 1800000 } } },
+    { "id": "b2n10", "name": "B2 Set Status: Final Review", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [600, 280],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": {
+          "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "Status": "Final Review",
+          "Render URL/Path": "={{ $json.outPath }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b2e1", "name": "B2 Build Error Fields", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-840, 560],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "message", "type": "string", "value": "={{ $json.error || $json.message || 'Unknown error' }}" }
+      ] } } },
+    { "id": "b2e2", "name": "B2 Set Status: Failed", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, 560],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": {
+          "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "Status": "Failed",
+          "Failed Stage": "production",
+          "Retry Count": "={{ ($('B2 Set Job Vars').item.json.retryCount || 0) + 1 }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b2e3", "name": "B2 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 560],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "create",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Errors" },
+        "columns": { "value": {
+          "Workflow": "00 - Master Orchestrator (B2 Production)",
+          "Video/Record": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "Message": "={{ $json.message }}",
+          "Timestamp": "={{ $now.toISO() }}",
+          "Resolved": false
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b3n1", "name": "B3 Find Approved Finals", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, 1000],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "search",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "filterByFormula": "=AND({Status}='Final Review', {Final Video Approved}=1)",
+        "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b3n2", "name": "B3 Loop Approved Finals", "type": "n8n-nodes-base.splitInBatches", "typeVersion": 3, "position": [-1320, 1000],
+      "parameters": { "batchSize": 1, "options": {} } },
+    { "id": "b3n3", "name": "B3 Set Job Vars", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-1080, 880],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "videoId", "type": "string", "value": "={{ $json.id }}" },
+        { "name": "title", "type": "string", "value": "={{ $json.fields.Title }}" },
+        { "name": "filePath", "type": "string", "value": "={{ $json.fields['Render URL/Path'] }}" },
+        { "name": "retryCount", "type": "number", "value": "={{ $json.fields['Retry Count'] || 0 }}" }
+      ] } } },
+    { "id": "b3n4", "name": "B3 Upload To YouTube", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-840, 880], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/youtube/upload", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filePath: $json.filePath, title: $json.title, description: '', privacyStatus: 'private' }) }}",
+        "options": { "timeout": 1800000 } } },
+    { "id": "b3n5", "name": "B3 Set Status: Published", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, 880],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": {
+          "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
+          "Status": "Published",
+          "YouTube ID": "={{ $json.youtubeId }}",
+          "Published At": "={{ $now.toISO() }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b3e1", "name": "B3 Build Error Fields", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [-840, 1120],
+      "parameters": { "mode": "manual", "assignments": { "assignments": [
+        { "name": "message", "type": "string", "value": "={{ $json.error || $json.message || 'Unknown error' }}" }
+      ] } } },
+    { "id": "b3e2", "name": "B3 Set Status: Failed", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, 1120],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": {
+          "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
+          "Status": "Failed",
+          "Failed Stage": "publish",
+          "Retry Count": "={{ ($('B3 Set Job Vars').item.json.retryCount || 0) + 1 }}"
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b3e3", "name": "B3 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 1120],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "create",
+        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "table": { "__rl": true, "mode": "name", "value": "Errors" },
+        "columns": { "value": {
+          "Workflow": "00 - Master Orchestrator (B3 Publish)",
+          "Video/Record": "={{ $('B3 Set Job Vars').item.json.videoId }}",
+          "Message": "={{ $json.message }}",
+          "Timestamp": "={{ $now.toISO() }}",
+          "Resolved": false
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } }
   ],
   "connections": {
-    "Every Minute": { "main": [[{ "node": "Find Jobs (Status=Start)", "type": "main", "index": 0 }]] },
-    "Find Jobs (Status=Start)": { "main": [[{ "node": "Loop Over Jobs", "type": "main", "index": 0 }]] },
-    "Loop Over Jobs": { "main": [[], [{ "node": "Build Job Vars", "type": "main", "index": 0 }]] },
-    "Build Job Vars": { "main": [[{ "node": "Generate Script", "type": "main", "index": 0 }]] },
-    "Generate Script": {
-      "main": [
-        [{ "node": "Build Scenes", "type": "main", "index": 0 }],
-        [{ "node": "Build Error Fields", "type": "main", "index": 0 }]
-      ]
-    },
-    "Build Scenes": {
-      "main": [
-        [{ "node": "Attach Assets", "type": "main", "index": 0 }],
-        [{ "node": "Build Error Fields", "type": "main", "index": 0 }]
-      ]
-    },
-    "Attach Assets": {
-      "main": [
-        [{ "node": "Set Status: Narrating", "type": "main", "index": 0 }],
-        [{ "node": "Build Error Fields", "type": "main", "index": 0 }]
-      ]
-    },
-    "Set Status: Narrating": { "main": [[{ "node": "Generate Voice", "type": "main", "index": 0 }]] },
-    "Generate Voice": {
-      "main": [
-        [{ "node": "Set Status: Rendering", "type": "main", "index": 0 }],
-        [{ "node": "Build Error Fields", "type": "main", "index": 0 }]
-      ]
-    },
-    "Set Status: Rendering": { "main": [[{ "node": "Render Video", "type": "main", "index": 0 }]] },
-    "Render Video": {
-      "main": [
-        [{ "node": "Set Status: Ready to Publish", "type": "main", "index": 0 }],
-        [{ "node": "Build Error Fields", "type": "main", "index": 0 }]
-      ]
-    },
-    "Set Status: Ready to Publish": { "main": [[{ "node": "Upload To YouTube", "type": "main", "index": 0 }]] },
-    "Upload To YouTube": {
-      "main": [
-        [{ "node": "Set Status: Published", "type": "main", "index": 0 }],
-        [{ "node": "Build Error Fields", "type": "main", "index": 0 }]
-      ]
-    },
-    "Set Status: Published": { "main": [[{ "node": "Loop Over Jobs", "type": "main", "index": 0 }]] },
-    "Build Error Fields": { "main": [[{ "node": "Set Status: Failed", "type": "main", "index": 0 }]] },
-    "Set Status: Failed": { "main": [[{ "node": "Log Error Record", "type": "main", "index": 0 }]] },
-    "Log Error Record": { "main": [[{ "node": "Loop Over Jobs", "type": "main", "index": 0 }]] }
+    "Every Minute": { "main": [[
+      { "node": "B1 Find New Jobs", "type": "main", "index": 0 },
+      { "node": "B2 Find Approved Scripts", "type": "main", "index": 0 },
+      { "node": "B3 Find Approved Finals", "type": "main", "index": 0 }
+    ]] },
+
+    "B1 Find New Jobs": { "main": [[{ "node": "B1 Loop New Jobs", "type": "main", "index": 0 }]] },
+    "B1 Loop New Jobs": { "main": [[], [{ "node": "B1 Set Job Vars", "type": "main", "index": 0 }]] },
+    "B1 Set Job Vars": { "main": [[{ "node": "B1 Generate Script", "type": "main", "index": 0 }]] },
+    "B1 Generate Script": { "main": [
+      [{ "node": "B1 Prepare Script Fields", "type": "main", "index": 0 }],
+      [{ "node": "B1 Build Error Fields", "type": "main", "index": 0 }]
+    ] },
+    "B1 Prepare Script Fields": { "main": [[{ "node": "B1 Set Status: Script Review", "type": "main", "index": 0 }]] },
+    "B1 Set Status: Script Review": { "main": [[{ "node": "B1 Loop New Jobs", "type": "main", "index": 0 }]] },
+    "B1 Build Error Fields": { "main": [[{ "node": "B1 Set Status: Failed", "type": "main", "index": 0 }]] },
+    "B1 Set Status: Failed": { "main": [[{ "node": "B1 Log Error", "type": "main", "index": 0 }]] },
+    "B1 Log Error": { "main": [[{ "node": "B1 Loop New Jobs", "type": "main", "index": 0 }]] },
+
+    "B2 Find Approved Scripts": { "main": [[{ "node": "B2 Loop Approved Scripts", "type": "main", "index": 0 }]] },
+    "B2 Loop Approved Scripts": { "main": [[], [{ "node": "B2 Set Job Vars", "type": "main", "index": 0 }]] },
+    "B2 Set Job Vars": { "main": [[{ "node": "B2 Build Scenes", "type": "main", "index": 0 }]] },
+    "B2 Build Scenes": { "main": [
+      [{ "node": "B2 Attach Assets", "type": "main", "index": 0 }],
+      [{ "node": "B2 Build Error Fields", "type": "main", "index": 0 }]
+    ] },
+    "B2 Attach Assets": { "main": [
+      [{ "node": "B2 Set Status: Narrating", "type": "main", "index": 0 }],
+      [{ "node": "B2 Build Error Fields", "type": "main", "index": 0 }]
+    ] },
+    "B2 Set Status: Narrating": { "main": [[{ "node": "B2 Generate Voice", "type": "main", "index": 0 }]] },
+    "B2 Generate Voice": { "main": [
+      [{ "node": "B2 Set Status: Rendering", "type": "main", "index": 0 }],
+      [{ "node": "B2 Build Error Fields", "type": "main", "index": 0 }]
+    ] },
+    "B2 Set Status: Rendering": { "main": [[{ "node": "B2 Render Video", "type": "main", "index": 0 }]] },
+    "B2 Render Video": { "main": [
+      [{ "node": "B2 Set Status: Final Review", "type": "main", "index": 0 }],
+      [{ "node": "B2 Build Error Fields", "type": "main", "index": 0 }]
+    ] },
+    "B2 Set Status: Final Review": { "main": [[{ "node": "B2 Loop Approved Scripts", "type": "main", "index": 0 }]] },
+    "B2 Build Error Fields": { "main": [[{ "node": "B2 Set Status: Failed", "type": "main", "index": 0 }]] },
+    "B2 Set Status: Failed": { "main": [[{ "node": "B2 Log Error", "type": "main", "index": 0 }]] },
+    "B2 Log Error": { "main": [[{ "node": "B2 Loop Approved Scripts", "type": "main", "index": 0 }]] },
+
+    "B3 Find Approved Finals": { "main": [[{ "node": "B3 Loop Approved Finals", "type": "main", "index": 0 }]] },
+    "B3 Loop Approved Finals": { "main": [[], [{ "node": "B3 Set Job Vars", "type": "main", "index": 0 }]] },
+    "B3 Set Job Vars": { "main": [[{ "node": "B3 Upload To YouTube", "type": "main", "index": 0 }]] },
+    "B3 Upload To YouTube": { "main": [
+      [{ "node": "B3 Set Status: Published", "type": "main", "index": 0 }],
+      [{ "node": "B3 Build Error Fields", "type": "main", "index": 0 }]
+    ] },
+    "B3 Set Status: Published": { "main": [[{ "node": "B3 Loop Approved Finals", "type": "main", "index": 0 }]] },
+    "B3 Build Error Fields": { "main": [[{ "node": "B3 Set Status: Failed", "type": "main", "index": 0 }]] },
+    "B3 Set Status: Failed": { "main": [[{ "node": "B3 Log Error", "type": "main", "index": 0 }]] },
+    "B3 Log Error": { "main": [[{ "node": "B3 Loop Approved Finals", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": { "executionOrder": "v1" }

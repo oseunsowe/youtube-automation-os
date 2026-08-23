@@ -1,48 +1,134 @@
 import { AirtableClient } from "./client.js";
-import type { Category, VideoJob } from "../common/types.js";
+import type { Category, MediaAsset, ProductionConfig, SceneDensity, VideoJob } from "../common/types.js";
+import { DEFAULT_VISUAL_PRIORITIES } from "../common/types.js";
 
 export { AirtableClient } from "./client.js";
 export type { AirtableRecord } from "./client.js";
 
+// Keep in sync with config/defaults.json -- duplicated here rather than
+// imported live to avoid a JSON-import-under-NodeNext dependency.
+const DEFAULTS = {
+  runtimeMinutes: 5,
+  voiceProvider: "edge-tts",
+  voice: "en-US-AndrewNeural",
+  visualStyle: "documentary",
+  sceneDensity: "medium" as SceneDensity,
+  renderProvider: "remotion",
+};
+
 export interface VideoFields {
   Title: string;
+  Channel?: string;
   Category: Category;
   Status: string;
-  "Scene Count"?: number;
+  "Target Runtime"?: number;
+  "Target Word Count"?: number;
+  "Voice Provider"?: string;
   Voice?: string;
+  "Narration Style"?: string;
+  "Narration Speed"?: number;
   "Visual Style"?: string;
-  "Default Runtime"?: number;
+  "Scene Density"?: SceneDensity;
+  "Average Scene Duration"?: number;
+  "Stock Footage Priority"?: boolean;
+  "Archive Priority"?: boolean;
+  "Map Usage"?: boolean;
+  "Document Usage"?: boolean;
+  "Chart Usage"?: boolean;
+  "Screenshot Usage"?: boolean;
+  "AI Image Usage"?: boolean;
+  "AI Video Usage"?: boolean;
+  "Render Provider"?: string;
+  Resolution?: string;
+  "Aspect Ratio"?: string;
+  "Background Music"?: boolean;
+  "Caption Style"?: string;
+  "Research Depth"?: "none" | "basic" | "deep";
+  "Require Script Approval"?: boolean;
+  "Require Final Approval"?: boolean;
+  "Script Approved"?: boolean;
+  "Final Video Approved"?: boolean;
+  "Auto Publish"?: boolean;
+  "Auto Repurpose"?: boolean;
+  "Publish Date"?: string;
+  Priority?: number;
+  "Scene Count"?: number;
   "Render URL/Path"?: string;
   "YouTube ID"?: string;
+  "Published At"?: string;
+  "Retry Count"?: number;
+  "Failed Stage"?: string;
 }
 
 export const VIDEO_STATUS = {
   START: "Start",
-  RESEARCHING: "Researching",
   SCRIPT_REVIEW: "Script Review",
   GENERATING_ASSETS: "Generating Assets",
   NARRATING: "Narrating",
   RENDERING: "Rendering",
-  QC_REQUIRED: "QC Required",
-  READY_TO_PUBLISH: "Ready to Publish",
+  FINAL_REVIEW: "Final Review",
   PUBLISHED: "Published",
   FAILED: "Failed",
 } as const;
+
+export function fieldsToProductionConfig(fields: VideoFields): ProductionConfig {
+  return {
+    channel: fields.Channel,
+    targetWordCount: fields["Target Word Count"],
+    voiceProvider: fields["Voice Provider"] ?? DEFAULTS.voiceProvider,
+    narrationStyle: fields["Narration Style"],
+    narrationSpeed: fields["Narration Speed"],
+    visualStyle: fields["Visual Style"] ?? DEFAULTS.visualStyle,
+    sceneDensity: fields["Scene Density"] ?? DEFAULTS.sceneDensity,
+    averageSceneDurationSeconds: fields["Average Scene Duration"],
+    visualPriorities: {
+      stockFootage: fields["Stock Footage Priority"] ?? DEFAULT_VISUAL_PRIORITIES.stockFootage,
+      archive: fields["Archive Priority"] ?? DEFAULT_VISUAL_PRIORITIES.archive,
+      map: fields["Map Usage"] ?? DEFAULT_VISUAL_PRIORITIES.map,
+      document: fields["Document Usage"] ?? DEFAULT_VISUAL_PRIORITIES.document,
+      chart: fields["Chart Usage"] ?? DEFAULT_VISUAL_PRIORITIES.chart,
+      screenshot: fields["Screenshot Usage"] ?? DEFAULT_VISUAL_PRIORITIES.screenshot,
+      aiImage: fields["AI Image Usage"] ?? DEFAULT_VISUAL_PRIORITIES.aiImage,
+      aiVideo: fields["AI Video Usage"] ?? DEFAULT_VISUAL_PRIORITIES.aiVideo,
+    },
+    renderProvider: fields["Render Provider"] ?? DEFAULTS.renderProvider,
+    resolution: fields.Resolution,
+    aspectRatio: fields["Aspect Ratio"],
+    backgroundMusic: fields["Background Music"] ?? false,
+    captionStyle: fields["Caption Style"],
+    researchDepth: fields["Research Depth"] ?? "none",
+    requireScriptApproval: fields["Require Script Approval"] ?? true,
+    requireFinalApproval: fields["Require Final Approval"] ?? true,
+    autoPublish: fields["Auto Publish"] ?? false,
+    autoRepurpose: fields["Auto Repurpose"] ?? false,
+    publishDate: fields["Publish Date"],
+    priority: fields.Priority,
+  };
+}
 
 export function fieldsToVideoJob(recordId: string, fields: VideoFields): VideoJob {
   return {
     videoId: recordId,
     title: fields.Title,
     category: fields.Category,
-    runtimeMinutes: fields["Default Runtime"] ?? 5,
-    voice: fields.Voice ?? "en-US-AndrewNeural",
-    visualStyle: fields["Visual Style"] ?? "documentary",
+    runtimeMinutes: fields["Target Runtime"] ?? DEFAULTS.runtimeMinutes,
+    voice: fields.Voice ?? DEFAULTS.voice,
+    visualStyle: fields["Visual Style"] ?? DEFAULTS.visualStyle,
+    production: fieldsToProductionConfig(fields),
   };
 }
 
-export async function findJobsToStart(client: AirtableClient, table: string): Promise<VideoJob[]> {
-  const records = await client.listRecords<VideoFields>(table, `{Status}='${VIDEO_STATUS.START}'`);
+export async function findJobsByStatus(
+  client: AirtableClient,
+  table: string,
+  formula: string,
+): Promise<VideoJob[]> {
+  const records = await client.listRecords<VideoFields>(table, formula);
   return records.map((r) => fieldsToVideoJob(r.id, r.fields));
+}
+
+export async function findJobsToStart(client: AirtableClient, table: string): Promise<VideoJob[]> {
+  return findJobsByStatus(client, table, `{Status}='${VIDEO_STATUS.START}'`);
 }
 
 export async function setStatus(
@@ -61,4 +147,38 @@ export async function logError(
   fields: { Workflow: string; Stage: string; "Video/Record"?: string; Message: string },
 ): Promise<void> {
   await client.createRecord(errorsTable, { ...fields, Timestamp: new Date().toISOString(), Resolved: false });
+}
+
+export interface MediaAssetFields {
+  Video: string[];
+  "Scene ID": string;
+  "Source Provider": string;
+  "Source URL": string;
+  Creator?: string;
+  License: string;
+  Attribution: string;
+  "Download Date": string;
+  "Local Path": string;
+  "Usage Status": "approved" | "review_required";
+}
+
+/** Writes one Media Assets ledger row per asset (Update 7 -- source/copyright provenance). */
+export async function recordMediaAsset(
+  client: AirtableClient,
+  table: string,
+  videoRecordId: string,
+  asset: MediaAsset,
+): Promise<void> {
+  await client.createRecord<MediaAssetFields>(table, {
+    Video: [videoRecordId],
+    "Scene ID": asset.sceneId,
+    "Source Provider": asset.sourceProvider,
+    "Source URL": asset.sourceUrl,
+    Creator: asset.creator,
+    License: asset.license,
+    Attribution: asset.attribution,
+    "Download Date": asset.downloadDate,
+    "Local Path": asset.localPath,
+    "Usage Status": asset.usageStatus,
+  });
 }

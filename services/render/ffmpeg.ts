@@ -12,14 +12,17 @@ function escapeDrawtext(text: string): string {
 
 export function buildImageSceneClipArgs(scene: Scene, outPath: string): string[] {
   const frames = Math.max(1, Math.round(scene.durationSeconds * 25));
+  const isStatic = scene.motion === "static";
+  const scaleFilter = isStatic
+    ? `scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT}`
+    : `scale=${WIDTH * 1.15}:-1,zoompan=z='min(zoom+0.0007,1.15)':d=${frames}:s=${WIDTH}x${HEIGHT}`;
   return [
     "-y",
     "-loop", "1",
     "-i", scene.assetPath as string,
     "-i", scene.audioPath as string,
     "-t", String(scene.durationSeconds),
-    "-vf",
-    `scale=${WIDTH * 1.15}:-1,zoompan=z='min(zoom+0.0007,1.15)':d=${frames}:s=${WIDTH}x${HEIGHT},format=yuv420p`,
+    "-vf", `${scaleFilter},format=yuv420p`,
     "-map", "0:v", "-map", "1:a",
     "-c:v", "libx264", "-c:a", "aac",
     "-shortest",
@@ -58,11 +61,13 @@ export function buildCardSceneClipArgs(scene: Scene, outPath: string): string[] 
   ];
 }
 
+const IMAGE_LIKE_TYPES = new Set(["image", "document", "screenshot"]);
+
 export function buildSceneClipArgs(scene: Scene, outPath: string): string[] {
   if (scene.visualType === "stock_video" && scene.assetPath) {
     return buildVideoSceneClipArgs(scene, outPath);
   }
-  if (scene.visualType === "image" && scene.assetPath) {
+  if (IMAGE_LIKE_TYPES.has(scene.visualType) && scene.assetPath) {
     return buildImageSceneClipArgs(scene, outPath);
   }
   return buildCardSceneClipArgs(scene, outPath);
