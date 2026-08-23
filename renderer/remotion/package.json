@@ -1,0 +1,23 @@
+{
+  "name": "renderer-remotion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "preview": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Documentary out/render.mp4"
+  },
+  "dependencies": {
+    "remotion": "^4.0.515",
+    "@remotion/cli": "^4.0.515",
+    "@remotion/renderer": "^4.0.515",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.4"
+  }
+}

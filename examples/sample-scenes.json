@@ -1,0 +1,41 @@
+{
+  "scenes": [
+    {
+      "id": "scene-01",
+      "index": 0,
+      "narration": "Something happened that no one saw coming: the collapse of a fund that never actually invested a single dollar.",
+      "durationSeconds": 8,
+      "visualType": "title",
+      "searchQuery": "empty office boardroom"
+    },
+    {
+      "id": "scene-02",
+      "index": 1,
+      "narration": "To understand why, you need to know how it started, three years earlier, with a single spreadsheet and a promise of guaranteed returns.",
+      "durationSeconds": 9,
+      "visualType": "image",
+      "searchQuery": "spreadsheet financial documents",
+      "assetPath": "./examples/fixtures/placeholder.jpg",
+      "assetProvider": "pexels",
+      "assetCredit": "Photo by Example Contributor on Pexels"
+    },
+    {
+      "id": "scene-03",
+      "index": 2,
+      "narration": "What came next changed everything, as new investor money quietly paid off old investors, and the numbers on paper kept climbing.",
+      "durationSeconds": 9,
+      "visualType": "stock_video",
+      "searchQuery": "stock market chart rising",
+      "assetPath": "./examples/fixtures/placeholder.mp4",
+      "assetProvider": "pexels",
+      "assetCredit": "Video by Example Contributor on Pexels"
+    },
+    {
+      "id": "scene-04",
+      "index": 3,
+      "narration": "\"We had no idea,\" one investor later said. \"Everything looked completely legitimate.\"",
+      "durationSeconds": 6,
+      "visualType": "quote"
+    }
+  ]
+}

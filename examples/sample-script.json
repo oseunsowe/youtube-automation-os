@@ -1,0 +1,14 @@
+{
+  "hook": "Something happened that no one saw coming: the collapse of a fund that never actually invested a single dollar.",
+  "script": "Something happened that no one saw coming: the collapse of a fund that never actually invested a single dollar.\n\nTo understand why, you need to know how it started, three years earlier, with a single spreadsheet and a promise of guaranteed returns.\n\nWhat came next changed everything, as new investor money quietly paid off old investors, and the numbers on paper kept climbing.\n\nThen, the truth finally came out when a routine audit asked a question no one could answer.\n\nIn the aftermath, the consequences became clear: thousands of investors, a federal indictment, and a company that no longer existed.\n\nThe story still raises questions today about how so many people missed the same warning signs.",
+  "chapters": [
+    { "title": "hook", "startSeconds": 0 },
+    { "title": "setup", "startSeconds": 12 },
+    { "title": "revelation", "startSeconds": 28 },
+    { "title": "climax", "startSeconds": 44 },
+    { "title": "aftermath", "startSeconds": 56 },
+    { "title": "ending", "startSeconds": 70 }
+  ],
+  "wordCount": 132,
+  "estimatedRuntimeSeconds": 80
+}

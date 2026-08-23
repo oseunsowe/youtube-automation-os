@@ -1,0 +1,70 @@
+{
+  "name": "07 - Scene Builder (standalone test)",
+  "nodes": [
+    {
+      "id": "b1-manual",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-800, 0],
+      "parameters": {}
+    },
+    {
+      "id": "b2-sample",
+      "name": "Sample Script",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-560, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "videoId", "type": "string", "value": "rec_sample" },
+            {
+              "name": "script",
+              "type": "object",
+              "value": "={{ { hook: 'Something happened that no one saw coming.', script: 'Something happened that no one saw coming.\\n\\nTo understand why, you need to know how it started.\\n\\nWhat came next changed everything.', chapters: [{ title: 'hook', startSeconds: 0 }], wordCount: 24, estimatedRuntimeSeconds: 10 } }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b3-build",
+      "name": "Build Scenes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-320, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:4000/scenes/build",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ script: $json.script }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b4-assets",
+      "name": "Attach Assets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-80, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:4000/assets/attach",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('Sample Script').item.json.videoId, scenes: $json.scenes }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Manual Test": { "main": [[{ "node": "Sample Script", "type": "main", "index": 0 }]] },
+    "Sample Script": { "main": [[{ "node": "Build Scenes", "type": "main", "index": 0 }]] },
+    "Build Scenes": { "main": [[{ "node": "Attach Assets", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

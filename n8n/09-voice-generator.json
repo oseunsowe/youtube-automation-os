@@ -1,0 +1,55 @@
+{
+  "name": "09 - Voice Generator (standalone test)",
+  "nodes": [
+    {
+      "id": "c1-manual",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-600, 0],
+      "parameters": {}
+    },
+    {
+      "id": "c2-sample",
+      "name": "Sample Scenes",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-360, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "videoId", "type": "string", "value": "rec_sample" },
+            { "name": "voice", "type": "string", "value": "en-US-AndrewNeural" },
+            {
+              "name": "scenes",
+              "type": "array",
+              "value": "={{ [ { id: 'scene-01', index: 0, narration: 'Something happened that no one saw coming.', durationSeconds: 5, visualType: 'title' } ] }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c3-http",
+      "name": "Generate Voice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-120, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:4000/voice/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ videoId: $json.videoId, scenes: $json.scenes, voice: $json.voice }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Manual Test": { "main": [[{ "node": "Sample Scenes", "type": "main", "index": 0 }]] },
+    "Sample Scenes": { "main": [[{ "node": "Generate Voice", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

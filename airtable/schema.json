@@ -1,0 +1,56 @@
+{
+  "note": "Reference schema for manual Airtable base setup (Phase 1 scope only). See airtable/fields.md for step-by-step creation instructions.",
+  "tables": [
+    {
+      "name": "Videos",
+      "primaryField": "Title",
+      "fields": [
+        { "name": "Title", "type": "singleLineText", "required": true },
+        {
+          "name": "Category",
+          "type": "singleSelect",
+          "options": ["financial-crime", "dark-business", "mysteries", "history", "ai-tech"]
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "options": [
+            "Start",
+            "Researching",
+            "Script Review",
+            "Generating Assets",
+            "Narrating",
+            "Rendering",
+            "QC Required",
+            "Ready to Publish",
+            "Scheduled",
+            "Published",
+            "Failed"
+          ],
+          "default": "Idea"
+        },
+        { "name": "Scene Count", "type": "number", "precision": 0 },
+        { "name": "Voice", "type": "singleLineText", "default": "en-US-AndrewNeural" },
+        { "name": "Visual Style", "type": "singleLineText", "default": "documentary" },
+        { "name": "Default Runtime", "type": "number", "precision": 0, "notes": "target runtime in minutes" },
+        { "name": "Render URL/Path", "type": "singleLineText" },
+        { "name": "YouTube ID", "type": "singleLineText" },
+        { "name": "Published At", "type": "dateTime" }
+      ]
+    },
+    {
+      "name": "Errors",
+      "primaryField": "Error ID",
+      "fields": [
+        { "name": "Error ID", "type": "autoNumber" },
+        { "name": "Workflow", "type": "singleLineText" },
+        { "name": "Stage", "type": "singleLineText" },
+        { "name": "Video/Record", "type": "singleLineText" },
+        { "name": "Message", "type": "multilineText" },
+        { "name": "Retry Count", "type": "number", "precision": 0, "default": 0 },
+        { "name": "Timestamp", "type": "dateTime" },
+        { "name": "Resolved", "type": "checkbox", "default": false }
+      ]
+    }
+  ]
+}

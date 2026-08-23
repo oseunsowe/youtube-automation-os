@@ -1,0 +1,17 @@
+{
+  "name": "YouTube Automation OS",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "worker",
+  "workspaceFolder": "/app",
+  "forwardPorts": [5678, 4000],
+  "portsAttributes": {
+    "5678": { "label": "n8n" },
+    "4000": { "label": "worker API" }
+  },
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}

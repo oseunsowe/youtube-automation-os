@@ -1,0 +1,23 @@
+{
+  "name": "youtube-automation-os",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Phase 1: Airtable -> n8n -> script -> scenes -> narration -> rendered video -> YouTube upload.",
+  "workspaces": [
+    "services",
+    "renderer/remotion"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace services && npm run build --workspace renderer/remotion",
+    "test": "vitest run",
+    "dev:worker": "npm run dev --workspace services",
+    "validate:n8n": "tsx scripts/validate-n8n.ts",
+    "dry-run": "tsx scripts/dry-run.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "tsx": "^4.16.2",
+    "vitest": "^2.0.5",
+    "@types/node": "^22.5.0"
+  }
+}

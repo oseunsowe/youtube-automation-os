@@ -1,0 +1,27 @@
+FROM node:20-bookworm-slim
+
+# ffmpeg for the fallback renderer/TTS duration probing; the rest are Chromium
+# runtime deps Remotion needs for headless rendering (see docs/QUICKSTART.md —
+# verify this list against Remotion's Docker guide once running in Codespace).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    chromium \
+    libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2 \
+    libxss1 libxtst6 libxrandr2 libxcomposite1 libxdamage1 libxfixes3 \
+    fonts-liberation ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package.json ./
+COPY services/package.json services/package.json
+COPY renderer/remotion/package.json renderer/remotion/package.json
+RUN npm install
+
+COPY . .
+RUN npm run build --workspace services
+
+ENV NODE_ENV=production
+EXPOSE 4000
+
+CMD ["node", "services/dist/server.js"]

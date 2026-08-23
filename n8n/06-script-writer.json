@@ -1,0 +1,51 @@
+{
+  "name": "06 - Script Writer (standalone test)",
+  "nodes": [
+    {
+      "id": "a1-manual",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-600, 0],
+      "parameters": {}
+    },
+    {
+      "id": "a2-sample",
+      "name": "Sample Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-360, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "title", "type": "string", "value": "The $8 Billion Ponzi No One Saw Coming" },
+            { "name": "category", "type": "string", "value": "financial-crime" },
+            { "name": "runtimeMinutes", "type": "number", "value": 5 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a3-http",
+      "name": "Generate Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-120, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:4000/script/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: $json.title, category: $json.category, runtimeMinutes: $json.runtimeMinutes }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Manual Test": { "main": [[{ "node": "Sample Input", "type": "main", "index": 0 }]] },
+    "Sample Input": { "main": [[{ "node": "Generate Script", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

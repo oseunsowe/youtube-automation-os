@@ -1,0 +1,10 @@
+{
+  "runtimeMinutes": 5,
+  "voice": "en-US-AndrewNeural",
+  "visualStyle": "documentary",
+  "renderEngine": "remotion",
+  "youtube": {
+    "privacyStatus": "private",
+    "categoryId": "27"
+  }
+}

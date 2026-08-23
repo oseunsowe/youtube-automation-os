@@ -1,0 +1,29 @@
+{
+  "categories": [
+    {
+      "id": "financial-crime",
+      "label": "Financial Crime & Scams",
+      "promptFile": "prompts/categories/financial-crime.md"
+    },
+    {
+      "id": "dark-business",
+      "label": "Dark Business Documentaries",
+      "promptFile": "prompts/categories/dark-business.md"
+    },
+    {
+      "id": "mysteries",
+      "label": "Unsolved Mysteries / Strange Events",
+      "promptFile": "prompts/categories/mysteries.md"
+    },
+    {
+      "id": "history",
+      "label": "History Documentaries",
+      "promptFile": "prompts/categories/history.md"
+    },
+    {
+      "id": "ai-tech",
+      "label": "AI / Technology Documentaries",
+      "promptFile": "prompts/categories/ai-tech.md"
+    }
+  ]
+}

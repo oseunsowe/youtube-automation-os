@@ -1,0 +1,34 @@
+{
+  "llm": {
+    "default": "gemini",
+    "providers": {
+      "gemini": { "status": "implemented", "envKey": "GEMINI_API_KEY", "model": "gemini-2.0-flash", "cost": "free tier" },
+      "mock": { "status": "implemented", "envKey": null, "cost": "free", "notes": "deterministic offline provider for tests/dry-run" },
+      "openai": { "status": "planned", "envKey": "OPENAI_API_KEY", "cost": "paid" },
+      "anthropic": { "status": "planned", "envKey": "ANTHROPIC_API_KEY", "cost": "paid" },
+      "ollama": { "status": "planned", "envKey": null, "cost": "free (local)" }
+    }
+  },
+  "tts": {
+    "default": "edge-tts",
+    "providers": {
+      "edge-tts": { "status": "implemented", "envKey": null, "cost": "free" },
+      "piper": { "status": "planned", "envKey": null, "cost": "free (local)" },
+      "kokoro": { "status": "planned", "envKey": null, "cost": "free (local)" },
+      "elevenlabs": { "status": "planned", "envKey": "ELEVENLABS_API_KEY", "cost": "paid" }
+    }
+  },
+  "assets": {
+    "providers": {
+      "pexels": { "status": "implemented", "envKey": "PEXELS_API_KEY", "cost": "free" },
+      "pixabay": { "status": "implemented", "envKey": "PIXABAY_API_KEY", "cost": "free" }
+    }
+  },
+  "render": {
+    "default": "remotion",
+    "engines": {
+      "remotion": { "status": "implemented", "requires": "Chromium (Docker/Codespace)" },
+      "ffmpeg": { "status": "implemented", "requires": "ffmpeg binary", "notes": "fallback when Remotion/Chromium isn't available" }
+    }
+  }
+}

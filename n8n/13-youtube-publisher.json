@@ -1,0 +1,52 @@
+{
+  "name": "13 - YouTube Publisher (standalone test)",
+  "nodes": [
+    {
+      "id": "e1-manual",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-600, 0],
+      "parameters": {}
+    },
+    {
+      "id": "e2-sample",
+      "name": "Sample Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-360, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "filePath", "type": "string", "value": "/data/rec_sample/output/final.mp4" },
+            { "name": "title", "type": "string", "value": "The $8 Billion Ponzi No One Saw Coming" },
+            { "name": "description", "type": "string", "value": "" },
+            { "name": "privacyStatus", "type": "string", "value": "private" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "e3-http",
+      "name": "Upload To YouTube",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-120, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:4000/youtube/upload",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": { "timeout": 1800000 }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Test": { "main": [[{ "node": "Sample Input", "type": "main", "index": 0 }]] },
+    "Sample Input": { "main": [[{ "node": "Upload To YouTube", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
