@@ -44,8 +44,8 @@
         { "name": "Document Usage", "type": "checkbox", "default": false },
         { "name": "Chart Usage", "type": "checkbox", "default": false, "notes": "routes to image fallback -- no dedicated chart component yet" },
         { "name": "Screenshot Usage", "type": "checkbox", "default": false },
-        { "name": "AI Image Usage", "type": "checkbox", "default": false, "notes": "Phase 2+ (no AI image generation implemented yet)" },
-        { "name": "AI Video Usage", "type": "checkbox", "default": false, "notes": "Phase 2+ (no AI video generation implemented yet)" },
+        { "name": "AI Image Usage", "type": "checkbox", "default": false, "notes": "opt-in only -- Higgsfield-generated image used as a fallback when Pexels/Pixabay search misses, requires HIGGSFIELD_API_KEY" },
+        { "name": "AI Video Usage", "type": "checkbox", "default": false, "notes": "opt-in only -- Higgsfield-generated video used as a fallback when Pexels/Pixabay search misses, requires HIGGSFIELD_API_KEY" },
 
         { "name": "Render Provider", "type": "singleSelect", "options": ["remotion", "json2video"], "default": "remotion" },
         { "name": "Resolution", "type": "singleLineText", "default": "1920x1080" },
