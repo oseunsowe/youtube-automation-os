@@ -4,4 +4,4 @@ Airtable is the job queue, production-config panel, and approval dashboard: you 
 
 For the exact fields, types, and step-by-step base creation instructions, see [`airtable/fields.md`](../airtable/fields.md) and the machine-readable [`airtable/schema.json`](../airtable/schema.json). A filled example row is in [`airtable/sample-data.csv`](../airtable/sample-data.csv).
 
-Three tables: **Videos** (the job queue, production config, and both approval checkboxes), **Media Assets** (source/copyright ledger, one row per downloaded stock asset), and **Errors** (failure log). Later phases add Channels, Content Ideas, Competitors, Research, Scripts, Scenes, Shorts, and Analytics tables (see `TODO.md` §6) — not needed yet.
+Four tables: **Videos** (the job queue, production config, and both approval checkboxes), **Media Assets** (source/copyright ledger, one row per downloaded stock asset), **Shorts** (opt-in social repurposing output -- see `docs/N8N.md`), and **Errors** (failure log). Later phases add Channels, Content Ideas, Competitors, Research, Scripts, and Analytics tables (see `TODO.md` §6) — not needed yet.

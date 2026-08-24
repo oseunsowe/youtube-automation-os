@@ -15,6 +15,7 @@ describe("n8n workflow files", () => {
         "09-voice-generator.json",
         "10-renderer.json",
         "13-youtube-publisher.json",
+        "14-social-repurpose.json",
       ].sort(),
     );
   });

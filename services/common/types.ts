@@ -137,3 +137,30 @@ export interface VideoJob {
   visualStyle: string;
   production: ProductionConfig;
 }
+
+export const SOCIAL_PLATFORMS = ["tiktok", "instagram_reels", "youtube_shorts", "facebook_reels"] as const;
+export const SocialPlatformSchema = z.enum(SOCIAL_PLATFORMS);
+export type SocialPlatform = z.infer<typeof SocialPlatformSchema>;
+
+/** A candidate vertical clip cut from a long-form render (Update 12 -- repurposing, opt-in/independent of the main pipeline). */
+export const ClipCandidateSchema = z.object({
+  id: z.string(),
+  startSeconds: z.number().nonnegative(),
+  endSeconds: z.number().positive(),
+  hook: z.string(),
+  sceneRange: z.string(),
+});
+export type ClipCandidate = z.infer<typeof ClipCandidateSchema>;
+
+export const ShortSchema = z.object({
+  shortId: z.string(),
+  videoId: z.string(),
+  hook: z.string(),
+  sceneRange: z.string(),
+  platform: SocialPlatformSchema,
+  caption: z.string(),
+  renderPath: z.string().optional(),
+  status: z.enum(["Pending", "Rendering", "Ready", "Posted", "Failed"]),
+  publishedUrl: z.string().optional(),
+});
+export type Short = z.infer<typeof ShortSchema>;

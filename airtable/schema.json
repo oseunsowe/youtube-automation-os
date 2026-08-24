@@ -92,6 +92,31 @@
       ]
     },
     {
+      "name": "Shorts",
+      "primaryField": "Short ID",
+      "notes": "One row per repurposed vertical clip cut from a Published video, posted cross-platform via Blotato (opt-in, Update 12).",
+      "fields": [
+        { "name": "Short ID", "type": "singleLineText" },
+        { "name": "Parent Video", "type": "multipleRecordLinks", "linkedTable": "Videos" },
+        { "name": "Hook", "type": "singleLineText", "notes": "opening line used for the clip, pulled from its first scene" },
+        { "name": "Segment", "type": "singleLineText", "notes": "scene id range this clip was cut from, e.g. scene-03..scene-05" },
+        {
+          "name": "Platform",
+          "type": "singleSelect",
+          "options": ["tiktok", "instagram_reels", "youtube_shorts", "facebook_reels"]
+        },
+        { "name": "Caption", "type": "multilineText" },
+        { "name": "Render Path", "type": "singleLineText" },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "options": ["Pending", "Rendering", "Ready", "Posted", "Failed"],
+          "default": "Pending"
+        },
+        { "name": "Published URL", "type": "url" }
+      ]
+    },
+    {
       "name": "Errors",
       "primaryField": "Error ID",
       "fields": [

@@ -44,6 +44,11 @@
       "s3": { "status": "planned", "envKey": null, "cost": "paid" }
     }
   },
+  "social": {
+    "providers": {
+      "blotato": { "status": "implemented", "envKey": "BLOTATO_API_KEY", "cost": "paid", "notes": "opt-in only -- never runs automatically, only via n8n/14-social-repurpose.json triggered manually per Published video. API shape unverified, see services/social/blotato.ts" }
+    }
+  },
   "topicMode": {
     "default": "manual",
     "modes": {

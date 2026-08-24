@@ -6,9 +6,10 @@ import { attachAssetsToScenes, resolveAssetOutDir, scenesToMediaAssets } from ".
 import { generateVoiceForScenes, resolveVoiceOutDir, getVoiceProvider } from "./voice/index.js";
 import { renderVideo, resolveRenderPaths, type RenderEngine } from "./render/index.js";
 import { uploadVideo } from "./youtube/index.js";
-import { AirtableClient, recordMediaAsset } from "./airtable/index.js";
+import { generateShorts, resolveShortsOutDir } from "./repurpose/index.js";
+import { AirtableClient, recordMediaAsset, recordShort } from "./airtable/index.js";
 import { env } from "./common/env.js";
-import { CategorySchema, ScriptSchema, SceneSchema, SceneDensitySchema } from "./common/types.js";
+import { CategorySchema, ScriptSchema, SceneSchema, SceneDensitySchema, SocialPlatformSchema } from "./common/types.js";
 import { z } from "zod";
 
 const app = express();
@@ -161,6 +162,46 @@ app.post("/youtube/upload", async (req, res) => {
       { title: body.title, description: body.description, privacyStatus: body.privacyStatus },
     );
     res.json({ youtubeId });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+const RepurposeRequestSchema = z.object({
+  videoId: z.string(),
+  scenes: z.array(SceneSchema),
+  renderPath: z.string(),
+  platforms: z.array(SocialPlatformSchema).default(["tiktok", "instagram_reels", "youtube_shorts"]),
+  post: z.boolean().default(false),
+  maxClips: z.number().int().positive().optional(),
+});
+
+app.post("/repurpose/generate", async (req, res) => {
+  try {
+    const { videoId, scenes, renderPath, platforms, post, maxClips } = RepurposeRequestSchema.parse(req.body);
+    const outDir = resolveShortsOutDir(videoId);
+
+    const shorts = await generateShorts(videoId, scenes, path.resolve(renderPath), outDir, {
+      platforms,
+      clipOptions: maxClips ? { maxClips } : undefined,
+      blotato:
+        post && env.social.blotatoApiKey
+          ? { apiKey: env.social.blotatoApiKey, baseUrl: env.social.blotatoBaseUrl }
+          : undefined,
+    });
+
+    if (env.airtable.apiKey && env.airtable.baseId) {
+      const client = new AirtableClient(env.airtable.apiKey, env.airtable.baseId);
+      await Promise.all(
+        shorts.map((short) =>
+          recordShort(client, env.airtable.shortsTable, videoId, short).catch((err) =>
+            console.warn(`[repurpose] failed to write Shorts row for ${short.shortId}: ${(err as Error).message}`),
+          ),
+        ),
+      );
+    }
+
+    res.json({ shorts });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

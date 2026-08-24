@@ -49,6 +49,10 @@ Per TODO.md's Update 11, the pipeline pauses twice rather than running fully una
 
 `config/providers.json` documents the full set (including stock asset providers `pexels`/`pixabay` implemented, `wikimedia`/`archives` planned) for humans.
 
+## Social repurposing (`services/repurpose/`, `services/social/blotato.ts`)
+
+Entirely independent of the main pipeline, per Update 12 ("keep social distribution out of Sprint 1" -- build it as its own subworkflow, never block the core engine on it): `services/repurpose/clipSelector.ts` picks candidate moments from a scene plan (the opening hook, quote/dramatic beats, spread evenly if more clips are needed), `services/repurpose/verticalCrop.ts` trims and crops each to 9:16 with a burned-in caption via ffmpeg, and `services/social/blotato.ts` optionally posts each clip cross-platform. Reachable only via `n8n/14-social-repurpose.json`, triggered manually per `Published` video -- never wired into the automatic `Start -> Published` orchestrator. Blotato's API shape is unverified (no account to test against), same caveat as Higgsfield.
+
 ## Visual router and scene density
 
 `services/scenes/splitter.ts` targets a runtime-derived scene count (roughly one visual change every 5-12 seconds depending on `Scene Density`) instead of one scene per script paragraph, and routes each scene's visual type through a rotation built from the Videos record's priority toggles (`Stock Footage Priority`, `Document Usage`, etc.). `map`/`chart` usage currently route to the plain image renderer -- there's no dedicated map/chart Remotion component yet (that's Phase 2 in `TODO.md` §8, unchanged by the patch).

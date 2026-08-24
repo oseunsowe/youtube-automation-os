@@ -17,6 +17,7 @@ export const env = {
     videosTable: str("AIRTABLE_VIDEOS_TABLE", "Videos"),
     mediaAssetsTable: str("AIRTABLE_MEDIA_ASSETS_TABLE", "Media Assets"),
     errorsTable: str("AIRTABLE_ERRORS_TABLE", "Errors"),
+    shortsTable: str("AIRTABLE_SHORTS_TABLE", "Shorts"),
   },
   llm: {
     provider: str("LLM_PROVIDER", "mock"),
@@ -46,6 +47,10 @@ export const env = {
   },
   storage: {
     provider: str("STORAGE_PROVIDER", "local"),
+  },
+  social: {
+    blotatoApiKey: str("BLOTATO_API_KEY"),
+    blotatoBaseUrl: str("BLOTATO_API_BASE_URL", "https://backend.blotato.com/v2"),
   },
   topic: {
     mode: str("TOPIC_MODE", "manual"),

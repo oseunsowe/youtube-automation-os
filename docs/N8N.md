@@ -1,6 +1,6 @@
 # n8n Workflows
 
-All six workflows in `n8n/` call the same worker API (`services/server.ts`) over HTTP — see `docs/ARCHITECTURE.md` for why they're intentionally thin.
+All seven workflows in `n8n/` call the same worker API (`services/server.ts`) over HTTP — see `docs/ARCHITECTURE.md` for why they're intentionally thin.
 
 ## Files
 
@@ -12,6 +12,7 @@ All six workflows in `n8n/` call the same worker API (`services/server.ts`) over
 | `09-voice-generator.json` | Standalone: calls `/voice/generate` with sample scenes. |
 | `10-renderer.json` | Standalone: calls `/render` with sample scenes. |
 | `13-youtube-publisher.json` | Standalone: calls `/youtube/upload` with a sample file path. |
+| `14-social-repurpose.json` | Standalone and **opt-in only** — calls `/repurpose/generate` (clip selection -> 9:16 crop -> optional Blotato post). Never runs automatically as part of the main pipeline; trigger it manually per `Published` video. See "Social repurposing" below. |
 
 Run the standalone ones manually (the "Manual Test" trigger node) while developing/debugging a single stage, without waiting on the full orchestrator loop.
 
@@ -36,6 +37,14 @@ Each branch polls independently every minute, so a record just sits at `Script R
 Every HTTP Request node has `"onError": "continueErrorOutput"`, giving it two outputs: the normal one (success) and an error one. Within each branch, every error output converges on that branch's `Build Error Fields -> Set Status: Failed -> Log Error` (back into that branch's loop, so one failed job doesn't stop the batch). A failed row shows `Status = Failed`, `Failed Stage` (`script` / `production` / `publish`), and `Retry Count` incremented, plus a row in `Errors` with the message. Fix the cause and set `Status` back to `Start` to retry -- B1's search formula skips rows whose `Retry Count` has already reached 3, so a job doesn't retry forever unattended (Update 9's "maximum retry count").
 
 If your n8n version doesn't expose the error output for a node (older n8n releases used a plain "Continue On Fail" checkbox instead), enable that checkbox on the node instead — the downstream wiring still works the same way.
+
+## Social repurposing (opt-in)
+
+`14-social-repurpose.json` is deliberately kept out of the main `Start -> Published` path (per the "keep social distribution out of Sprint 1" principle: the core documentary engine must keep working even with this disabled). To use it:
+
+1. Open the workflow, edit the **Sample Input** node with a real `videoId`, `renderPath` (a `Published` video's `Render URL/Path`), and its `scenes` array (from that job's `scenes.json`).
+2. Set `post: true` and add `BLOTATO_API_KEY` to `.env` to actually post; leave `post: false` to just render the cropped 9:16 clips locally without posting anywhere.
+3. Run it manually. Clips and (if posted) their URLs land in the `Shorts` Airtable table.
 
 ## Node schema caveat
 

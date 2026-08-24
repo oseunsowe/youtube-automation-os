@@ -136,6 +136,7 @@ async function main() {
   const videosTable = schema.tables.find((t) => t.name === "Videos")!;
   const errorsTable = schema.tables.find((t) => t.name === "Errors")!;
   const mediaAssetsTable = schema.tables.find((t) => t.name === "Media Assets")!;
+  const shortsTable = schema.tables.find((t) => t.name === "Shorts")!;
 
   let baseId: string;
 
@@ -157,6 +158,7 @@ async function main() {
   const videosTableId = await createTable(baseId, videosTable, existing);
   await createTable(baseId, errorsTable, existing);
   await createTable(baseId, mediaAssetsTable, existing, videosTableId);
+  await createTable(baseId, shortsTable, existing, videosTableId);
 
   console.log(`\nDone. Add this to .env:\nAIRTABLE_BASE_ID=${baseId}\n`);
 }

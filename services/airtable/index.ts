@@ -1,5 +1,5 @@
 import { AirtableClient } from "./client.js";
-import type { Category, MediaAsset, ProductionConfig, SceneDensity, VideoJob } from "../common/types.js";
+import type { Category, MediaAsset, ProductionConfig, SceneDensity, Short, VideoJob } from "../common/types.js";
 import { DEFAULT_VISUAL_PRIORITIES } from "../common/types.js";
 
 export { AirtableClient } from "./client.js";
@@ -182,5 +182,37 @@ export async function recordMediaAsset(
     "Download Date": asset.downloadDate,
     "Local Path": asset.localPath,
     "Usage Status": asset.usageStatus,
+  });
+}
+
+export interface ShortFields {
+  "Short ID": string;
+  "Parent Video": string[];
+  Hook: string;
+  Segment: string;
+  Platform: string;
+  Caption: string;
+  "Render Path"?: string;
+  Status: Short["status"];
+  "Published URL"?: string;
+}
+
+/** Writes one Shorts row per repurposed clip (Update 12 -- independent/opt-in social repurposing). */
+export async function recordShort(
+  client: AirtableClient,
+  table: string,
+  videoRecordId: string,
+  short: Short,
+): Promise<void> {
+  await client.createRecord<ShortFields>(table, {
+    "Short ID": short.shortId,
+    "Parent Video": [videoRecordId],
+    Hook: short.hook,
+    Segment: short.sceneRange,
+    Platform: short.platform,
+    Caption: short.caption,
+    "Render Path": short.renderPath,
+    Status: short.status,
+    "Published URL": short.publishedUrl,
   });
 }

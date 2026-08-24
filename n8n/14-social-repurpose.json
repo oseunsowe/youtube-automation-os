@@ -1,0 +1,57 @@
+{
+  "name": "14 - Social Repurpose (standalone, opt-in)",
+  "nodes": [
+    {
+      "id": "f1-manual",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-600, 0],
+      "parameters": {}
+    },
+    {
+      "id": "f2-sample",
+      "name": "Sample Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-360, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "name": "videoId", "type": "string", "value": "rec_sample" },
+            { "name": "renderPath", "type": "string", "value": "/data/rec_sample/output/final.mp4" },
+            { "name": "platforms", "type": "array", "value": "={{ ['tiktok', 'instagram_reels', 'youtube_shorts'] }}" },
+            { "name": "post", "type": "boolean", "value": false },
+            {
+              "name": "scenes",
+              "type": "array",
+              "value": "={{ [ { id: 'scene-01', index: 0, narration: 'Something happened that no one saw coming.', durationSeconds: 8, visualType: 'title' }, { id: 'scene-02', index: 1, narration: 'To understand why, you need to know how it started.', durationSeconds: 9, visualType: 'image' } ] }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f3-http",
+      "name": "Generate Shorts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-120, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:4000/repurpose/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": { "timeout": 1800000 }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Test": { "main": [[{ "node": "Sample Input", "type": "main", "index": 0 }]] },
+    "Sample Input": { "main": [[{ "node": "Generate Shorts", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

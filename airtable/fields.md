@@ -89,6 +89,22 @@ Source/copyright ledger -- one row per downloaded stock/archival asset.
 | Local Path | Single line text | |
 | Usage Status | Single select | `approved` / `review_required` |
 
+## Shorts table
+
+One row per repurposed vertical clip. Opt-in, independent of the main pipeline -- see `docs/N8N.md`'s `14-social-repurpose.json` workflow. Never runs automatically; you trigger it manually per Published video.
+
+| Field | Type | Notes |
+|---|---|---|
+| Short ID | Single line text | Primary field, e.g. `<videoId>-clip-1` |
+| Parent Video | Link to another record (Videos) | |
+| Hook | Single line text | Opening line, pulled from the clip's first scene |
+| Segment | Single line text | Scene id range this clip covers, e.g. `scene-03..scene-05` |
+| Platform | Single select | `tiktok` / `instagram_reels` / `youtube_shorts` / `facebook_reels` -- one row per platform per clip |
+| Caption | Long text | |
+| Render Path | Single line text | Local path to the cropped 9:16 clip |
+| Status | Single select | `Pending` / `Rendering` / `Ready` / `Posted` / `Failed` |
+| Published URL | URL | Filled in after Blotato posts it |
+
 ## Errors table
 
 | Field | Type | Notes |
