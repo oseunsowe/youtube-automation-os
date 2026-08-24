@@ -3,7 +3,7 @@ import type { Script, ScriptChapter } from "../common/types.js";
 import { loadSharedPrompt, loadCategoryPrompt } from "./prompts.js";
 
 const WORDS_PER_MINUTE = 150;
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gemini-3.6-flash";
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;

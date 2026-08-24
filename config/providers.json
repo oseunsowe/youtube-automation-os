@@ -2,7 +2,7 @@
   "llm": {
     "default": "gemini",
     "providers": {
-      "gemini": { "status": "implemented", "envKey": "GEMINI_API_KEY", "model": "gemini-2.0-flash", "cost": "free tier" },
+      "gemini": { "status": "implemented", "envKey": "GEMINI_API_KEY", "model": "gemini-3.6-flash", "cost": "free tier" },
       "mock": { "status": "implemented", "envKey": null, "cost": "free", "notes": "deterministic offline provider for tests/dry-run" },
       "openai": { "status": "planned", "envKey": "OPENAI_API_KEY", "cost": "paid" },
       "anthropic": { "status": "planned", "envKey": "ANTHROPIC_API_KEY", "cost": "paid" },
