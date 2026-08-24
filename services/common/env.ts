@@ -33,8 +33,9 @@ export const env = {
   assets: {
     pexelsApiKey: str("PEXELS_API_KEY"),
     pixabayApiKey: str("PIXABAY_API_KEY"),
-    higgsfieldApiKey: str("HIGGSFIELD_API_KEY"),
-    higgsfieldBaseUrl: str("HIGGSFIELD_API_BASE_URL", "https://api.higgsfield.ai/v1"),
+    higgsfieldApiKeyId: str("HIGGSFIELD_API_KEY_ID"),
+    higgsfieldApiKeySecret: str("HIGGSFIELD_API_KEY_SECRET"),
+    higgsfieldBaseUrl: str("HIGGSFIELD_API_BASE_URL", "https://platform.higgsfield.ai"),
   },
   youtube: {
     clientId: str("YOUTUBE_CLIENT_ID"),

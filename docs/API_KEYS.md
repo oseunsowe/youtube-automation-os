@@ -33,5 +33,5 @@ Only needed if you want higher-quality narration for a specific job. It is **nev
 ## Higgsfield (optional, paid, opt-in only)
 
 AI-generated images/video for scenes where real stock footage search comes up empty. **Never used automatically** — only kicks in when a Videos record's `AI Image Usage`/`AI Video Usage` checkbox is on, and only as a fallback after Pexels/Pixabay search misses.
-- `HIGGSFIELD_API_KEY` from [higgsfield.ai](https://higgsfield.ai).
-- The integration (`services/assets/higgsfield.ts`) was written without an account to verify the exact API against, so double-check it works (and adjust `HIGGSFIELD_API_BASE_URL`/endpoint paths if needed) before relying on it.
+- Get **both** a Key ID and a Key Secret from your account dashboard at [platform.higgsfield.ai](https://platform.higgsfield.ai) → `HIGGSFIELD_API_KEY_ID` and `HIGGSFIELD_API_KEY_SECRET`. A single token isn't enough -- Higgsfield's auth header is `Key {id}:{secret}`.
+- Video generation is image-to-video, not text-to-video: there's no prompt-only video endpoint, so `generateVideo()` generates a still image first and animates that -- one "AI Video Usage" scene costs two generation jobs.

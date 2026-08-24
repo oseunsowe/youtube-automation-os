@@ -24,7 +24,7 @@
       "pixabay": { "status": "implemented", "envKey": "PIXABAY_API_KEY", "cost": "free" },
       "wikimedia": { "status": "planned", "envKey": null, "cost": "free" },
       "archives": { "status": "planned", "envKey": null, "cost": "free", "notes": "Library of Congress / National Archives / NASA etc." },
-      "higgsfield": { "status": "implemented", "envKey": "HIGGSFIELD_API_KEY", "cost": "paid", "notes": "AI image/video generation -- opt-in only, used only when AI Image Usage/AI Video Usage is checked AND real stock footage search comes up empty. API shape unverified, see services/assets/higgsfield.ts" }
+      "higgsfield": { "status": "implemented", "envKey": "HIGGSFIELD_API_KEY_ID / HIGGSFIELD_API_KEY_SECRET", "cost": "paid", "notes": "AI image/video generation -- opt-in only, used only when AI Image Usage/AI Video Usage is checked AND real stock footage search comes up empty. Verified against Higgsfield's real docs; video is image-to-video (generates a still first, then animates it), see services/assets/higgsfield.ts" }
     }
   },
   "render": {

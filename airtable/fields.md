@@ -45,8 +45,8 @@ See `schema.json` in this folder for the exact field list in machine-readable fo
 | Document Usage | Checkbox | |
 | Chart Usage | Checkbox | Routes to the image fallback -- no dedicated chart component yet |
 | Screenshot Usage | Checkbox | |
-| AI Image Usage | Checkbox | Off by default. When on, an AI-generated image (via Higgsfield, paid, requires `HIGGSFIELD_API_KEY`) is used **only** as a fallback for a scene where Pexels/Pixabay search comes up empty -- never the default source. |
-| AI Video Usage | Checkbox | Same as above, for video scenes. |
+| AI Image Usage | Checkbox | Off by default. When on, an AI-generated image (via Higgsfield, paid, requires `HIGGSFIELD_API_KEY_ID` + `HIGGSFIELD_API_KEY_SECRET`) is used **only** as a fallback for a scene where Pexels/Pixabay search comes up empty -- never the default source. |
+| AI Video Usage | Checkbox | Same as above, for video scenes. Higgsfield has no text-to-video endpoint -- this generates a still image first and animates it, so it costs two generation jobs, not one. |
 | Render Provider | Single select | `remotion` / `json2video` |
 | Resolution | Single line text | Default `1920x1080` |
 | Aspect Ratio | Single line text | Default `16:9` |

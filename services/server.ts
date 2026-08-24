@@ -81,7 +81,8 @@ app.post("/assets/attach", async (req, res) => {
       {
         pexelsApiKey: env.assets.pexelsApiKey,
         pixabayApiKey: env.assets.pixabayApiKey,
-        higgsfieldApiKey: env.assets.higgsfieldApiKey,
+        higgsfieldApiKeyId: env.assets.higgsfieldApiKeyId,
+        higgsfieldApiKeySecret: env.assets.higgsfieldApiKeySecret,
         higgsfieldBaseUrl: env.assets.higgsfieldBaseUrl,
         useAiImage: visualPriorities?.aiImage ?? false,
         useAiVideo: visualPriorities?.aiVideo ?? false,
