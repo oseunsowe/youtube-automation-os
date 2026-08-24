@@ -150,6 +150,7 @@ export async function logError(
 }
 
 export interface MediaAssetFields {
+  "Asset ID": string;
   Video: string[];
   "Scene ID": string;
   "Source Provider": string;
@@ -170,6 +171,7 @@ export async function recordMediaAsset(
   asset: MediaAsset,
 ): Promise<void> {
   await client.createRecord<MediaAssetFields>(table, {
+    "Asset ID": asset.assetId,
     Video: [videoRecordId],
     "Scene ID": asset.sceneId,
     "Source Provider": asset.sourceProvider,

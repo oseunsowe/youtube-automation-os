@@ -77,7 +77,7 @@ Source/copyright ledger -- one row per downloaded stock/archival asset.
 
 | Field | Type | Notes |
 |---|---|---|
-| Asset ID | Autonumber | Primary field |
+| Asset ID | Single line text | Primary field. `services/assets/index.ts` fills this with `<videoId>-<sceneId>`. |
 | Video | Link to another record (Videos) | |
 | Scene ID | Single line text | |
 | Source Provider | Single line text | e.g. `pexels`, `pixabay` |
@@ -93,7 +93,7 @@ Source/copyright ledger -- one row per downloaded stock/archival asset.
 
 | Field | Type | Notes |
 |---|---|---|
-| Error ID | Autonumber | Primary field |
+| Error ID | Single line text | Primary field |
 | Workflow | Single line text | Which n8n workflow failed |
 | Stage | Single line text | Which step within the workflow |
 | Video/Record | Single line text | The Videos record ID that failed |

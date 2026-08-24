@@ -1,18 +1,22 @@
 /**
- * One-time setup script: creates the Airtable base (Videos, Media Assets,
- * Errors tables) from airtable/schema.json via Airtable's Meta API, instead
- * of clicking through ~40 fields by hand.
+ * One-time setup script: creates the Videos, Media Assets, and Errors
+ * tables from airtable/schema.json via Airtable's Meta API, instead of
+ * clicking through ~40 fields by hand.
  *
  * Requires a Personal Access Token with scopes: data.records:read,
- * data.records:write, schema.bases:read, schema.bases:write, and access to
- * the target workspace (the base doesn't exist yet, so it can't be scoped
- * to a specific base -- grant it "all current and future bases" or select
- * the workspace explicitly when creating the token).
+ * data.records:write, schema.bases:read, schema.bases:write.
+ *
+ * Two modes:
+ *  - AIRTABLE_BASE_ID set: adds the three tables to that existing base.
+ *  - AIRTABLE_BASE_ID unset + AIRTABLE_WORKSPACE_ID set: creates a brand
+ *    new base (name from AIRTABLE_BASE_NAME) in that workspace, then adds
+ *    Media Assets as a second call once the new Videos table's id is known.
  *
  * Usage:
- *   AIRTABLE_API_KEY=... AIRTABLE_WORKSPACE_ID=wspXXXXXXXXXXXXXX npx tsx scripts/create-airtable-base.ts
+ *   npx tsx scripts/create-airtable-base.ts
+ * (reads AIRTABLE_API_KEY / AIRTABLE_BASE_ID / AIRTABLE_WORKSPACE_ID from .env)
  *
- * Prints the new base ID at the end -- put that in .env as AIRTABLE_BASE_ID.
+ * Prints the base ID at the end -- put that in .env as AIRTABLE_BASE_ID.
  */
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -21,13 +25,14 @@ import "../services/common/env.js"; // loads .env via dotenv/config as a side ef
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const API_KEY = process.env.AIRTABLE_API_KEY;
+const EXISTING_BASE_ID = process.env.AIRTABLE_BASE_ID || undefined;
 const WORKSPACE_ID = process.env.AIRTABLE_WORKSPACE_ID;
 const BASE_NAME = process.env.AIRTABLE_BASE_NAME || "YouTube Automation OS";
 
 if (!API_KEY) throw new Error("AIRTABLE_API_KEY is not set (check .env)");
-if (!WORKSPACE_ID) {
+if (!EXISTING_BASE_ID && !WORKSPACE_ID) {
   throw new Error(
-    "AIRTABLE_WORKSPACE_ID is not set. Find it in the URL when you open a workspace at airtable.com (starts with 'wsp').",
+    "Set either AIRTABLE_BASE_ID (to add tables to an existing base) or AIRTABLE_WORKSPACE_ID (to create a new base).",
   );
 }
 
@@ -85,11 +90,11 @@ function mapField(field: SchemaField, linkedTableId?: string): Record<string, un
   }
 }
 
-async function airtableFetch(url: string, body: unknown) {
+async function airtableFetch(url: string, body?: unknown) {
   const res = await fetch(url, {
-    method: "POST",
+    method: body === undefined ? "GET" : "POST",
     headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   const json = await res.json();
   if (!res.ok) {
@@ -98,38 +103,60 @@ async function airtableFetch(url: string, body: unknown) {
   return json;
 }
 
+async function getExistingTables(baseId: string): Promise<Map<string, string>> {
+  const result = (await airtableFetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`)) as {
+    tables: { id: string; name: string }[];
+  };
+  return new Map(result.tables.map((t) => [t.name, t.id]));
+}
+
+async function createTable(
+  baseId: string,
+  table: SchemaTable,
+  existing: Map<string, string>,
+  linkedTableId?: string,
+): Promise<string> {
+  const existingId = existing.get(table.name);
+  if (existingId) {
+    console.log(`Table "${table.name}" already exists, skipping.`);
+    return existingId;
+  }
+  const fields = table.fields.map((f) =>
+    f.type === "multipleRecordLinks" ? mapField(f, linkedTableId) : mapField(f),
+  );
+  console.log(`Creating table "${table.name}"...`);
+  const result = (await airtableFetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
+    name: table.name,
+    fields,
+  })) as { id: string; name: string };
+  return result.id;
+}
+
 async function main() {
   const videosTable = schema.tables.find((t) => t.name === "Videos")!;
   const errorsTable = schema.tables.find((t) => t.name === "Errors")!;
   const mediaAssetsTable = schema.tables.find((t) => t.name === "Media Assets")!;
 
-  console.log(`Creating base "${BASE_NAME}" with Videos + Errors tables...`);
-  const createBaseBody = {
-    name: BASE_NAME,
-    workspaceId: WORKSPACE_ID,
-    tables: [
-      { name: videosTable.name, fields: videosTable.fields.map((f) => mapField(f)) },
-      { name: errorsTable.name, fields: errorsTable.fields.map((f) => mapField(f)) },
-    ],
-  };
-  const baseResult = (await airtableFetch("https://api.airtable.com/v0/meta/bases", createBaseBody)) as {
-    id: string;
-    tables: { id: string; name: string }[];
-  };
+  let baseId: string;
 
-  const baseId = baseResult.id;
-  const videosTableId = baseResult.tables.find((t) => t.name === "Videos")?.id;
-  if (!videosTableId) throw new Error("Videos table id missing from create-base response");
-  console.log(`Base created: ${baseId}`);
+  if (EXISTING_BASE_ID) {
+    baseId = EXISTING_BASE_ID;
+    console.log(`Adding tables to existing base ${baseId}...`);
+  } else {
+    console.log(`Creating base "${BASE_NAME}"...`);
+    const baseResult = (await airtableFetch("https://api.airtable.com/v0/meta/bases", {
+      name: BASE_NAME,
+      workspaceId: WORKSPACE_ID,
+      tables: [{ name: videosTable.name, fields: videosTable.fields.map((f) => mapField(f)) }],
+    })) as { id: string };
+    baseId = baseResult.id;
+    console.log(`Base created: ${baseId}`);
+  }
 
-  console.log(`Creating Media Assets table (linked to Videos)...`);
-  const mediaAssetsFields = mediaAssetsTable.fields.map((f) =>
-    f.type === "multipleRecordLinks" ? mapField(f, videosTableId) : mapField(f),
-  );
-  await airtableFetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
-    name: mediaAssetsTable.name,
-    fields: mediaAssetsFields,
-  });
+  const existing = await getExistingTables(baseId);
+  const videosTableId = await createTable(baseId, videosTable, existing);
+  await createTable(baseId, errorsTable, existing);
+  await createTable(baseId, mediaAssetsTable, existing, videosTableId);
 
   console.log(`\nDone. Add this to .env:\nAIRTABLE_BASE_ID=${baseId}\n`);
 }

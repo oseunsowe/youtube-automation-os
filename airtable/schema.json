@@ -78,7 +78,7 @@
       "primaryField": "Asset ID",
       "notes": "Source/copyright ledger -- one row per downloaded stock/archival asset (Update 7).",
       "fields": [
-        { "name": "Asset ID", "type": "autoNumber" },
+        { "name": "Asset ID", "type": "singleLineText" },
         { "name": "Video", "type": "multipleRecordLinks", "linkedTable": "Videos" },
         { "name": "Scene ID", "type": "singleLineText" },
         { "name": "Source Provider", "type": "singleLineText" },
@@ -95,7 +95,7 @@
       "name": "Errors",
       "primaryField": "Error ID",
       "fields": [
-        { "name": "Error ID", "type": "autoNumber" },
+        { "name": "Error ID", "type": "singleLineText" },
         { "name": "Workflow", "type": "singleLineText" },
         { "name": "Stage", "type": "singleLineText" },
         { "name": "Video/Record", "type": "singleLineText" },
