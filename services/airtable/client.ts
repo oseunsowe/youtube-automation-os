@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "../common/fetchTimeout.js";
+
 export interface AirtableRecord<T = Record<string, unknown>> {
   id: string;
   fields: T;
@@ -28,7 +30,7 @@ export class AirtableClient {
     const url = new URL(this.tableUrl(table));
     if (filterByFormula) url.searchParams.set("filterByFormula", filterByFormula);
 
-    const res = await this.fetchImpl(url.toString(), { headers: this.headers() });
+    const res = await fetchWithTimeout(this.fetchImpl, url.toString(), { headers: this.headers() });
     if (!res.ok) {
       throw new Error(`Airtable listRecords failed: ${res.status} ${await res.text()}`);
     }
@@ -41,7 +43,7 @@ export class AirtableClient {
     recordId: string,
     fields: Partial<T>,
   ): Promise<void> {
-    const res = await this.fetchImpl(this.tableUrl(table, `/${recordId}`), {
+    const res = await fetchWithTimeout(this.fetchImpl, this.tableUrl(table, `/${recordId}`), {
       method: "PATCH",
       headers: this.headers(),
       body: JSON.stringify({ fields }),
@@ -52,7 +54,7 @@ export class AirtableClient {
   }
 
   async createRecord<T = Record<string, unknown>>(table: string, fields: T): Promise<AirtableRecord<T>> {
-    const res = await this.fetchImpl(this.tableUrl(table), {
+    const res = await fetchWithTimeout(this.fetchImpl, this.tableUrl(table), {
       method: "POST",
       headers: this.headers(),
       body: JSON.stringify({ fields }),

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { writeFile } from "node:fs/promises";
 import type { VoiceProvider } from "./provider.js";
+import { fetchWithTimeout } from "../common/fetchTimeout.js";
 
 const DEFAULT_MODEL_ID = "eleven_multilingual_v2";
 // ElevenLabs' well-known default "Rachel" voice, used only if the job
@@ -23,7 +24,7 @@ export class ElevenLabsProvider implements VoiceProvider {
   async synthesizeToFile(text: string, voice: string, outDir: string, fileName: string): Promise<string> {
     const voiceId = voice || FALLBACK_VOICE_ID;
 
-    const res = await this.fetchImpl(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const res = await fetchWithTimeout(this.fetchImpl, `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: {
         "xi-api-key": this.apiKey,

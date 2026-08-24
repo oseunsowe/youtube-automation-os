@@ -5,6 +5,7 @@ import { searchPexelsPhoto, searchPexelsVideo, type AssetResult } from "./pexels
 import { searchPixabayPhoto, searchPixabayVideo } from "./pixabay.js";
 import { generateImage, generateVideo } from "./higgsfield.js";
 import { getStorageProvider, type StorageProvider } from "../storage/index.js";
+import { fetchWithTimeout, LONG_FETCH_TIMEOUT_MS } from "../common/fetchTimeout.js";
 
 export type { AssetResult } from "./pexels.js";
 
@@ -12,7 +13,8 @@ export interface AssetProviderKeys {
   pexelsApiKey: string;
   pixabayApiKey: string;
   /** AI generation is a fallback used only when real footage search misses AND the operator opted in. */
-  higgsfieldApiKey?: string;
+  higgsfieldApiKeyId?: string;
+  higgsfieldApiKeySecret?: string;
   higgsfieldBaseUrl?: string;
   useAiImage?: boolean;
   useAiVideo?: boolean;
@@ -42,12 +44,13 @@ async function findAsset(
   // generating synthetic media"); AI generation only kicks in when the
   // operator explicitly enabled it and stock search came up empty.
   const wantsAi = wantsVideo ? keys.useAiVideo : keys.useAiImage;
-  if (!wantsAi || !keys.higgsfieldApiKey) return null;
+  if (!wantsAi || !keys.higgsfieldApiKeyId || !keys.higgsfieldApiKeySecret) return null;
 
   try {
     const higgsfieldOptions = {
-      apiKey: keys.higgsfieldApiKey,
-      baseUrl: keys.higgsfieldBaseUrl ?? "https://api.higgsfield.ai/v1",
+      apiKeyId: keys.higgsfieldApiKeyId,
+      apiKeySecret: keys.higgsfieldApiKeySecret,
+      baseUrl: keys.higgsfieldBaseUrl ?? "https://platform.higgsfield.ai",
     };
     return wantsVideo ? await generateVideo(query, higgsfieldOptions) : await generateImage(query, higgsfieldOptions);
   } catch (err) {
@@ -57,7 +60,7 @@ async function findAsset(
 }
 
 async function downloadTo(url: string, filePath: string, fetchImpl: typeof fetch = fetch): Promise<void> {
-  const res = await fetchImpl(url);
+  const res = await fetchWithTimeout(fetchImpl, url, {}, LONG_FETCH_TIMEOUT_MS);
   if (!res.ok) throw new Error(`Failed to download asset: ${res.status} ${url}`);
   const buffer = Buffer.from(await res.arrayBuffer());
   await writeFile(filePath, buffer);

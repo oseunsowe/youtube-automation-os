@@ -1,4 +1,5 @@
 import { createReadStream, statSync } from "node:fs";
+import { fetchWithTimeout, LONG_FETCH_TIMEOUT_MS } from "../common/fetchTimeout.js";
 
 export interface YouTubeCredentials {
   clientId: string;
@@ -18,7 +19,7 @@ export async function getAccessToken(
   creds: YouTubeCredentials,
   fetchImpl: typeof fetch = fetch,
 ): Promise<string> {
-  const res = await fetchImpl("https://oauth2.googleapis.com/token", {
+  const res = await fetchWithTimeout(fetchImpl, "https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -42,7 +43,8 @@ export async function initiateResumableUpload(
   fileSizeBytes: number,
   fetchImpl: typeof fetch = fetch,
 ): Promise<string> {
-  const res = await fetchImpl(
+  const res = await fetchWithTimeout(
+    fetchImpl,
     "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
     {
       method: "POST",
@@ -77,15 +79,20 @@ export async function uploadFileToResumableUrl(
   fetchImpl: typeof fetch = fetch,
 ): Promise<string> {
   const { size } = statSync(filePath);
-  const res = await fetchImpl(uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "video/mp4",
-      "Content-Length": String(size),
+  const res = await fetchWithTimeout(
+    fetchImpl,
+    uploadUrl,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Length": String(size),
+      },
+      duplex: "half",
+      body: createReadStream(filePath),
     },
-    duplex: "half",
-    body: createReadStream(filePath),
-  });
+    LONG_FETCH_TIMEOUT_MS,
+  );
   if (!res.ok) {
     throw new Error(`YouTube file upload failed: ${res.status} ${await res.text()}`);
   }

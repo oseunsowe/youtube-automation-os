@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import type { Scene } from "../common/types.js";
+import { fetchWithTimeout, LONG_FETCH_TIMEOUT_MS } from "../common/fetchTimeout.js";
 
 /**
  * JSON2Video v2 movie-definition mapping and API calls. Written from general
@@ -68,7 +69,7 @@ export async function createMovie(
   apiKey: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<string> {
-  const res = await fetchImpl("https://api.json2video.com/v2/movies", {
+  const res = await fetchWithTimeout(fetchImpl, "https://api.json2video.com/v2/movies", {
     method: "POST",
     headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify(movie),
@@ -91,9 +92,11 @@ export async function pollMovieStatus(
   apiKey: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<Json2VideoStatus> {
-  const res = await fetchImpl(`https://api.json2video.com/v2/movies?project=${encodeURIComponent(projectId)}`, {
-    headers: { "x-api-key": apiKey },
-  });
+  const res = await fetchWithTimeout(
+    fetchImpl,
+    `https://api.json2video.com/v2/movies?project=${encodeURIComponent(projectId)}`,
+    { headers: { "x-api-key": apiKey } },
+  );
   if (!res.ok) {
     throw new Error(`JSON2Video status check failed: ${res.status} ${await res.text()}`);
   }
@@ -127,7 +130,7 @@ export async function renderWithJson2Video(
       throw new Error(`JSON2Video render failed for project ${projectId}`);
     }
     if (status.status === "done" && status.url) {
-      const res = await fetchImpl(status.url);
+      const res = await fetchWithTimeout(fetchImpl, status.url, {}, LONG_FETCH_TIMEOUT_MS);
       if (!res.ok) throw new Error(`Failed to download JSON2Video output: ${res.status}`);
       await writeFile(outPath, Buffer.from(await res.arrayBuffer()));
       return outPath;

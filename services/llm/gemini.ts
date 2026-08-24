@@ -1,6 +1,7 @@
 import type { LLMProvider, ScriptRequest } from "./provider.js";
 import type { Script, ScriptChapter } from "../common/types.js";
 import { loadSharedPrompt, loadCategoryPrompt } from "./prompts.js";
+import { fetchWithTimeout } from "../common/fetchTimeout.js";
 
 const WORDS_PER_MINUTE = 150;
 const DEFAULT_MODEL = "gemini-3.6-flash";
@@ -50,7 +51,7 @@ export class GeminiLLMProvider implements LLMProvider {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
 
-    const response = await this.fetchImpl(url, {
+    const response = await fetchWithTimeout(this.fetchImpl, url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

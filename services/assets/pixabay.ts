@@ -1,4 +1,5 @@
 import type { AssetResult } from "./pexels.js";
+import { fetchWithTimeout } from "../common/fetchTimeout.js";
 
 export async function searchPixabayVideo(
   query: string,
@@ -6,7 +7,8 @@ export async function searchPixabayVideo(
   fetchImpl: typeof fetch = fetch,
 ): Promise<AssetResult | null> {
   if (!apiKey) return null;
-  const res = await fetchImpl(
+  const res = await fetchWithTimeout(
+    fetchImpl,
     `https://pixabay.com/api/videos/?key=${apiKey}&q=${encodeURIComponent(query)}&per_page=3`,
   );
   if (!res.ok) return null;
@@ -29,7 +31,8 @@ export async function searchPixabayPhoto(
   fetchImpl: typeof fetch = fetch,
 ): Promise<AssetResult | null> {
   if (!apiKey) return null;
-  const res = await fetchImpl(
+  const res = await fetchWithTimeout(
+    fetchImpl,
     `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(query)}&per_page=3&image_type=photo`,
   );
   if (!res.ok) return null;

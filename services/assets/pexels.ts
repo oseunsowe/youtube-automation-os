@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "../common/fetchTimeout.js";
+
 export interface AssetResult {
   provider: "pexels" | "pixabay" | "higgsfield";
   url: string;
@@ -10,7 +12,8 @@ export async function searchPexelsVideo(
   fetchImpl: typeof fetch = fetch,
 ): Promise<AssetResult | null> {
   if (!apiKey) return null;
-  const res = await fetchImpl(
+  const res = await fetchWithTimeout(
+    fetchImpl,
     `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
     { headers: { Authorization: apiKey } },
   );
@@ -35,7 +38,8 @@ export async function searchPexelsPhoto(
   fetchImpl: typeof fetch = fetch,
 ): Promise<AssetResult | null> {
   if (!apiKey) return null;
-  const res = await fetchImpl(
+  const res = await fetchWithTimeout(
+    fetchImpl,
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
     { headers: { Authorization: apiKey } },
   );

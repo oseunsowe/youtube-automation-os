@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { SocialPlatform } from "../common/types.js";
+import { fetchWithTimeout, LONG_FETCH_TIMEOUT_MS } from "../common/fetchTimeout.js";
 
 /**
  * Blotato cross-platform posting adapter.
@@ -26,11 +27,16 @@ export async function uploadMedia(filePath: string, options: BlotatoOptions): Pr
   const form = new FormData();
   form.append("file", new Blob([buffer]), filePath.split(/[\\/]/).pop() ?? "clip.mp4");
 
-  const res = await fetchImpl(`${options.baseUrl}/media`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${options.apiKey}` },
-    body: form,
-  });
+  const res = await fetchWithTimeout(
+    fetchImpl,
+    `${options.baseUrl}/media`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${options.apiKey}` },
+      body: form,
+    },
+    LONG_FETCH_TIMEOUT_MS,
+  );
   if (!res.ok) {
     throw new Error(`Blotato media upload failed: ${res.status} ${await res.text()}`);
   }
@@ -52,7 +58,7 @@ export async function createPost(
   options: BlotatoOptions,
 ): Promise<BlotatoPostResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const res = await fetchImpl(`${options.baseUrl}/posts`, {
+  const res = await fetchWithTimeout(fetchImpl, `${options.baseUrl}/posts`, {
     method: "POST",
     headers: { Authorization: `Bearer ${options.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ platform, mediaUrl, caption }),
