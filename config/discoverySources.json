@@ -1,0 +1,25 @@
+{
+  "note": "Seed keywords/subreddits the discovery engine (TOPIC_MODE=discovery, services/discovery/) searches per category. Edit freely -- these are starting points, not fixed.",
+  "categories": {
+    "financial-crime": {
+      "keywords": ["ponzi scheme exposed", "financial fraud case", "scam investigation"],
+      "subreddits": ["Scams", "IdiotsInCars", "personalfinance"]
+    },
+    "dark-business": {
+      "keywords": ["corporate scandal documentary", "company collapse explained", "business exposed"],
+      "subreddits": ["Fraud", "businessscandal", "explainlikeimfive"]
+    },
+    "mysteries": {
+      "keywords": ["unsolved mystery case", "strange disappearance", "unexplained event"],
+      "subreddits": ["UnresolvedMysteries", "Mystery", "creepy"]
+    },
+    "history": {
+      "keywords": ["untold history documentary", "historical event explained", "forgotten history"],
+      "subreddits": ["history", "AskHistorians", "todayilearned"]
+    },
+    "ai-tech": {
+      "keywords": ["ai breakthrough explained", "tech company controversy", "new ai model"],
+      "subreddits": ["artificial", "technology", "singularity"]
+    }
+  }
+}

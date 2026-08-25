@@ -59,6 +59,15 @@ See `docs/N8N.md` for what each workflow does and how the error-handling branche
 
 If a step fails, `Status` becomes `Failed`, `Failed Stage` records which branch (`script`/`production`/`publish`), and a row appears in the `Errors` table with the message — fix the cause and set `Status` back to `Start` to retry. A record whose `Retry Count` has already hit 3 is skipped by B1's search formula rather than retried forever unattended.
 
+## 7. Optional: try topic discovery instead of typing a title
+
+By default (`TOPIC_MODE=manual`) you type the `Title` yourself, as above. To have topics suggested automatically instead:
+
+1. Get a `YOUTUBE_API_KEY` (see `docs/API_KEYS.md`) and set `TOPIC_MODE=discovery` in `.env`, then restart the stack.
+2. In n8n, the orchestrator now has a fourth branch (B0/B0b, see `docs/N8N.md`) with its own `Daily Discovery` schedule trigger (06:00). You can also right-click it → **Execute step** to run it once immediately instead of waiting.
+3. Rows with `Status = Topic Review` appear in Airtable with a suggested `Title`, `Opportunity Score`, and `Opportunity Rationale` explaining the score.
+4. Check `Topic Approved` on the ones you like — within a minute `Status` flips to `Start` and it flows into the normal pipeline exactly like a manually-typed title.
+
 ## Known gaps to verify in the Codespace
 
 These were written and unit-tested for their logic, but couldn't be exercised end-to-end on the machine this was built on (no Docker/ffmpeg/Chromium/API keys there):

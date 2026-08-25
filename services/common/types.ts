@@ -138,6 +138,16 @@ export interface VideoJob {
   production: ProductionConfig;
 }
 
+/** One scored topic candidate from the discovery/opportunity engine (TOPIC_MODE=discovery, Sprint 4). */
+export const TopicSuggestionSchema = z.object({
+  title: z.string(),
+  category: CategorySchema,
+  opportunityScore: z.number().min(0).max(100),
+  rationale: z.string(),
+  sources: z.array(z.string()),
+});
+export type TopicSuggestion = z.infer<typeof TopicSuggestionSchema>;
+
 export const SOCIAL_PLATFORMS = ["tiktok", "instagram_reels", "youtube_shorts", "facebook_reels"] as const;
 export const SocialPlatformSchema = z.enum(SOCIAL_PLATFORMS);
 export type SocialPlatform = z.infer<typeof SocialPlatformSchema>;

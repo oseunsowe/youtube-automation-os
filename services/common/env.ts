@@ -56,6 +56,9 @@ export const env = {
   topic: {
     mode: str("TOPIC_MODE", "manual"),
   },
+  discovery: {
+    youtubeApiKey: str("YOUTUBE_API_KEY"),
+  },
   worker: {
     port: Number(str("WORKER_PORT", "4000")),
     dataDir: str("DATA_DIR", "./data"),

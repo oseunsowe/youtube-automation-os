@@ -16,6 +16,7 @@
           "name": "Status",
           "type": "singleSelect",
           "options": [
+            "Topic Review",
             "Start",
             "Script Review",
             "Generating Assets",
@@ -25,7 +26,8 @@
             "Published",
             "Failed"
           ],
-          "default": "Start"
+          "default": "Start",
+          "notes": "'Topic Review' only appears on rows created by the discovery engine (TOPIC_MODE=discovery) -- see Topic Approved below."
         },
         { "name": "Target Runtime", "type": "number", "precision": 0, "notes": "target runtime in minutes" },
         { "name": "Target Word Count", "type": "number", "precision": 0, "notes": "optional; derived from Target Runtime if blank" },
@@ -70,7 +72,12 @@
         { "name": "YouTube ID", "type": "singleLineText" },
         { "name": "Published At", "type": "dateTime" },
         { "name": "Retry Count", "type": "number", "precision": 0, "default": 0 },
-        { "name": "Failed Stage", "type": "singleLineText" }
+        { "name": "Failed Stage", "type": "singleLineText" },
+
+        { "name": "Topic Approved", "type": "checkbox", "default": false, "notes": "discovery engine only (TOPIC_MODE=discovery) -- checking this on a 'Topic Review' row flips Status to Start, handing off to B1 exactly like a manually-entered title" },
+        { "name": "Opportunity Score", "type": "number", "notes": "0-100, set by the discovery engine -- see services/discovery/score.ts" },
+        { "name": "Opportunity Rationale", "type": "multilineText", "notes": "plain-language explanation of the score (YouTube velocity, Reddit engagement, Trends), set by the discovery engine" },
+        { "name": "Opportunity Sources", "type": "multilineText", "notes": "newline-separated source URLs (YouTube video, Reddit post) the discovery engine used as evidence" }
       ]
     },
     {

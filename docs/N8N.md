@@ -6,7 +6,7 @@ All seven workflows in `n8n/` call the same worker API (`services/server.ts`) ov
 
 | File | Purpose |
 |---|---|
-| `00-master-orchestrator.json` | The real pipeline, as three independently-triggered branches off one schedule (see below). **Import and activate this one.** |
+| `00-master-orchestrator.json` | The real pipeline, as three independently-triggered branches off one schedule, plus an opt-in fourth topic-discovery pair (see below). **Import and activate this one.** |
 | `06-script-writer.json` | Standalone: calls `/script/generate` alone with a sample title/category, for testing that one stage. |
 | `07-scene-builder.json` | Standalone: calls `/scenes/build` then `/assets/attach` with a sample script. |
 | `09-voice-generator.json` | Standalone: calls `/voice/generate` with sample scenes. |
@@ -25,6 +25,13 @@ Run the standalone ones manually (the "Manual Test" trigger node) while developi
 - **B3 (`Status='Final Review'` AND `Final Video Approved`)** — uploads to YouTube, sets `Status='Published'`.
 
 Each branch polls independently every minute, so a record just sits at `Script Review`/`Final Review` until its checkbox is checked -- nothing times out or needs to be re-triggered manually.
+
+## Topic discovery: B0/B0b (opt-in, `TOPIC_MODE=discovery`)
+
+A fourth pair of branches, added on top of B1/B2/B3, for the v1 opportunity engine (`services/discovery/`, see `docs/ARCHITECTURE.md`). Inert by default -- `/discovery/find` returns a 400 unless `TOPIC_MODE=discovery` is set, so leaving these branches active costs nothing while `TOPIC_MODE=manual`.
+
+- **B0 (its own `Daily Discovery` schedule trigger, 06:00)** — calls `POST /discovery/find`. The worker itself scores candidates and writes `Status='Topic Review'` rows directly to the `Videos` table (same pattern as `/assets/attach` writing `Media Assets` rows) -- there's nothing for n8n to do on success, so the success output is left unconnected; the error output goes to `B0 Log Error`.
+- **B0b (`Status='Topic Review'` AND `Topic Approved`, polls every minute alongside B1-B3)** — sets `Status='Start'` on approved rows, handing off directly into B1's own search on the next tick. No production logic is duplicated here.
 
 ## Setup after import
 

@@ -20,6 +20,13 @@ Both free, sign up and grab an API key from their developer pages:
 2. Create an OAuth 2.0 Client ID (type: Desktop app) → `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET`.
 3. Run the OAuth consent flow once (e.g. via [Google's OAuth Playground](https://developers.google.com/oauthplayground), scope `https://www.googleapis.com/auth/youtube.upload`, using your own client ID/secret in Playground's settings) to obtain a **refresh token** → `YOUTUBE_REFRESH_TOKEN`. The worker exchanges this for short-lived access tokens on every upload (`services/youtube/upload.ts`), so you only need to do this once per channel.
 
+## YouTube Data API v3 -- search key (topic discovery, opt-in)
+
+Only needed if you set `TOPIC_MODE=discovery`. This is a **separate, simpler credential** from the OAuth upload client above -- a plain server API key, no consent flow.
+1. Same Google Cloud project as above (YouTube Data API v3 already enabled) → **Credentials → Create Credentials → API key**.
+2. (Recommended) Restrict it to "YouTube Data API v3" under API restrictions.
+3. → `YOUTUBE_API_KEY`.
+
 ## edge-tts
 
 No key needed — it's a free Microsoft service. `TTS_PROVIDER=edge-tts` is the default.

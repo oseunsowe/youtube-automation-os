@@ -12,10 +12,16 @@
       }
     },
 
+    { "id": "triggerDaily", "name": "Daily Discovery", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.2, "position": [-1800, 1560],
+      "parameters": {
+        "rule": { "interval": [{ "field": "days", "daysInterval": 1, "triggerAtHour": 6, "triggerAtMinute": 0 }] }
+      }
+    },
+
     { "id": "b1n1", "name": "B1 Find New Jobs", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, -300],
       "parameters": {
         "authentication": "airtableTokenApi", "operation": "search",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "filterByFormula": "=AND({Status}='Start', OR({Retry Count}='', {Retry Count}<3))",
         "options": {}
@@ -43,7 +49,7 @@
       ] } } },
     { "id": "b1n6", "name": "B1 Set Status: Script Review", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, -420],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
@@ -59,7 +65,7 @@
       ] } } },
     { "id": "b1e2", "name": "B1 Set Status: Failed", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, -180],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
@@ -70,7 +76,7 @@
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b1e3", "name": "B1 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, -180],
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
         "columns": { "value": {
           "Workflow": "00 - Master Orchestrator (B1 Start)",
@@ -83,7 +89,7 @@
 
     { "id": "b2n1", "name": "B2 Find Approved Scripts", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, 400],
       "parameters": { "authentication": "airtableTokenApi", "operation": "search",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "filterByFormula": "=AND({Status}='Script Review', {Script Approved}=1)",
         "options": {} },
@@ -113,7 +119,7 @@
         "options": {} } },
     { "id": "b2n6", "name": "B2 Set Status: Narrating", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
@@ -127,7 +133,7 @@
         "options": {} } },
     { "id": "b2n8", "name": "B2 Set Status: Rendering", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [120, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": { "id": "={{ $('B2 Set Job Vars').item.json.videoId }}", "Status": "Rendering" } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
@@ -137,7 +143,7 @@
         "options": { "timeout": 1800000 } } },
     { "id": "b2n10", "name": "B2 Set Status: Final Review", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [600, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
@@ -152,7 +158,7 @@
       ] } } },
     { "id": "b2e2", "name": "B2 Set Status: Failed", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, 560],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
@@ -163,7 +169,7 @@
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b2e3", "name": "B2 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 560],
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
         "columns": { "value": {
           "Workflow": "00 - Master Orchestrator (B2 Production)",
@@ -176,7 +182,7 @@
 
     { "id": "b3n1", "name": "B3 Find Approved Finals", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, 1000],
       "parameters": { "authentication": "airtableTokenApi", "operation": "search",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "filterByFormula": "=AND({Status}='Final Review', {Final Video Approved}=1)",
         "options": {} },
@@ -196,7 +202,7 @@
         "options": { "timeout": 1800000 } } },
     { "id": "b3n5", "name": "B3 Set Status: Published", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, 880],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
@@ -212,7 +218,7 @@
       ] } } },
     { "id": "b3e2", "name": "B3 Set Status: Failed", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-600, 1120],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "value": {
           "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
@@ -223,7 +229,7 @@
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b3e3", "name": "B3 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 1120],
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
-        "base": { "__rl": true, "mode": "id", "value": "REPLACE_WITH_YOUR_BASE_ID" },
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
         "columns": { "value": {
           "Workflow": "00 - Master Orchestrator (B3 Publish)",
@@ -232,14 +238,48 @@
           "Timestamp": "={{ $now.toISO() }}",
           "Resolved": false
         } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b0n1", "name": "B0 Discover Topics", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-1560, 1560], "onError": "continueErrorOutput",
+      "parameters": { "method": "POST", "url": "http://worker:4000/discovery/find", "sendBody": true, "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {} } },
+    { "id": "b0n2", "name": "B0 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1320, 1680],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "create",
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
+        "table": { "__rl": true, "mode": "name", "value": "Errors" },
+        "columns": { "value": {
+          "Workflow": "00 - Master Orchestrator (B0 Discovery)",
+          "Message": "={{ $json.error || $json.message || 'Unknown error' }}",
+          "Timestamp": "={{ $now.toISO() }}",
+          "Resolved": false
+        } }, "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+
+    { "id": "b0bn1", "name": "B0b Find Approved Topics", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1560, 1820],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "search",
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "filterByFormula": "=AND({Status}='Topic Review', {Topic Approved}=1)",
+        "options": {} },
+      "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
+    { "id": "b0bn2", "name": "B0b Loop Approved Topics", "type": "n8n-nodes-base.splitInBatches", "typeVersion": 3, "position": [-1320, 1820],
+      "parameters": { "batchSize": 1, "options": {} } },
+    { "id": "b0bn3", "name": "B0b Set Status: Start", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-1080, 1900],
+      "parameters": { "authentication": "airtableTokenApi", "operation": "update",
+        "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
+        "table": { "__rl": true, "mode": "name", "value": "Videos" },
+        "columns": { "value": { "id": "={{ $json.id }}", "Status": "Start" } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } }
   ],
   "connections": {
     "Every Minute": { "main": [[
       { "node": "B1 Find New Jobs", "type": "main", "index": 0 },
       { "node": "B2 Find Approved Scripts", "type": "main", "index": 0 },
-      { "node": "B3 Find Approved Finals", "type": "main", "index": 0 }
+      { "node": "B3 Find Approved Finals", "type": "main", "index": 0 },
+      { "node": "B0b Find Approved Topics", "type": "main", "index": 0 }
     ]] },
+    "Daily Discovery": { "main": [[{ "node": "B0 Discover Topics", "type": "main", "index": 0 }]] },
 
     "B1 Find New Jobs": { "main": [[{ "node": "B1 Loop New Jobs", "type": "main", "index": 0 }]] },
     "B1 Loop New Jobs": { "main": [[], [{ "node": "B1 Set Job Vars", "type": "main", "index": 0 }]] },
@@ -290,7 +330,16 @@
     "B3 Set Status: Published": { "main": [[{ "node": "B3 Loop Approved Finals", "type": "main", "index": 0 }]] },
     "B3 Build Error Fields": { "main": [[{ "node": "B3 Set Status: Failed", "type": "main", "index": 0 }]] },
     "B3 Set Status: Failed": { "main": [[{ "node": "B3 Log Error", "type": "main", "index": 0 }]] },
-    "B3 Log Error": { "main": [[{ "node": "B3 Loop Approved Finals", "type": "main", "index": 0 }]] }
+    "B3 Log Error": { "main": [[{ "node": "B3 Loop Approved Finals", "type": "main", "index": 0 }]] },
+
+    "B0 Discover Topics": { "main": [
+      [],
+      [{ "node": "B0 Log Error", "type": "main", "index": 0 }]
+    ] },
+
+    "B0b Find Approved Topics": { "main": [[{ "node": "B0b Loop Approved Topics", "type": "main", "index": 0 }]] },
+    "B0b Loop Approved Topics": { "main": [[], [{ "node": "B0b Set Status: Start", "type": "main", "index": 0 }]] },
+    "B0b Set Status: Start": { "main": [[{ "node": "B0b Loop Approved Topics", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": { "executionOrder": "v1" }

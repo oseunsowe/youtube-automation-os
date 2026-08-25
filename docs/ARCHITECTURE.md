@@ -67,4 +67,6 @@ Everything a job produces lives under `DATA_DIR/<videoId>/`: `script.json`, `sce
 
 ## What's deliberately not in Phase 1
 
-Research/fact-checking, competitor intelligence, opportunity scoring, topic discovery mode, Shorts/Reels repurposing, dedicated map/chart/timeline visual components, and analytics are later phases in `TODO.md` -- Phase 1 proves `Airtable -> n8n -> script (approved) -> scenes -> narration -> rendered video (approved) -> YouTube upload`.
+Research/fact-checking, competitor intelligence, dedicated map/chart/timeline visual components, and analytics are later phases in `TODO.md` -- Phase 1 proves `Airtable -> n8n -> script (approved) -> scenes -> narration -> rendered video (approved) -> YouTube upload`.
+
+A v1 topic discovery/opportunity engine (`TOPIC_MODE=discovery`, opt-in) was added on top of that: `services/discovery/` scores candidate topics per category from three free signals (YouTube view velocity, Reddit engagement, best-effort Google Trends), and a new B0/B0b branch pair in `n8n/00-master-orchestrator.json` runs it daily and forwards operator-approved suggestions into the existing B1 branch as `Status: Start` rows -- see `docs/N8N.md`. Competitor-channel tracking is still deferred (needs operator-supplied channel IDs).

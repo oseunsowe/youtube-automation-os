@@ -7,9 +7,10 @@ import { generateVoiceForScenes, resolveVoiceOutDir, getVoiceProvider } from "./
 import { renderVideo, resolveRenderPaths, type RenderEngine } from "./render/index.js";
 import { uploadVideo } from "./youtube/index.js";
 import { generateShorts, resolveShortsOutDir } from "./repurpose/index.js";
-import { AirtableClient, recordMediaAsset, recordShort } from "./airtable/index.js";
+import { findTopicSuggestions } from "./discovery/index.js";
+import { AirtableClient, recordMediaAsset, recordShort, recordTopicSuggestion } from "./airtable/index.js";
 import { env } from "./common/env.js";
-import { CategorySchema, ScriptSchema, SceneSchema, SceneDensitySchema, SocialPlatformSchema } from "./common/types.js";
+import { CATEGORIES, CategorySchema, ScriptSchema, SceneSchema, SceneDensitySchema, SocialPlatformSchema } from "./common/types.js";
 import { z } from "zod";
 
 const app = express();
@@ -203,6 +204,41 @@ app.post("/repurpose/generate", async (req, res) => {
     }
 
     res.json({ shorts });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+const DiscoveryRequestSchema = z.object({
+  categories: z.array(CategorySchema).default([...CATEGORIES]),
+  maxPerCategory: z.number().int().positive().default(3),
+});
+
+app.post("/discovery/find", async (req, res) => {
+  if (env.topic.mode !== "discovery") {
+    res.status(400).json({
+      error: "TOPIC_MODE is not set to 'discovery' -- topic discovery is opt-in, see docs/API_KEYS.md.",
+    });
+    return;
+  }
+  try {
+    const { categories, maxPerCategory } = DiscoveryRequestSchema.parse(req.body);
+    const suggestions = await findTopicSuggestions(categories, maxPerCategory, {
+      youtubeApiKey: env.discovery.youtubeApiKey,
+    });
+
+    if (env.airtable.apiKey && env.airtable.baseId) {
+      const client = new AirtableClient(env.airtable.apiKey, env.airtable.baseId);
+      await Promise.all(
+        suggestions.map((s) =>
+          recordTopicSuggestion(client, env.airtable.videosTable, s).catch((err) =>
+            console.warn(`[discovery] failed to write Topic Review row for "${s.title}": ${(err as Error).message}`),
+          ),
+        ),
+      );
+    }
+
+    res.json({ suggestions });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

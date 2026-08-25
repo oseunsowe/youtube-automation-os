@@ -53,7 +53,7 @@
     "default": "manual",
     "modes": {
       "manual": { "status": "implemented", "notes": "operator types a title" },
-      "discovery": { "status": "planned", "notes": "Opportunity Engine -- Sprint 4 (competitor intelligence, breakout detection)" }
+      "discovery": { "status": "implemented", "envKey": "YOUTUBE_API_KEY", "cost": "free", "notes": "v1 Opportunity Engine -- see services/discovery/. Scores topics 0-100 from YouTube view velocity (55%), Reddit engagement (30%), best-effort Google Trends (15%); runs daily, top 3 suggestions/category, via n8n's B0/B0b branches. Competitor-channel tracking still deferred (Sprint 4 v2 -- needs operator-supplied channel IDs)." }
     }
   }
 }

@@ -1,5 +1,5 @@
 import { AirtableClient } from "./client.js";
-import type { Category, MediaAsset, ProductionConfig, SceneDensity, Short, VideoJob } from "../common/types.js";
+import type { Category, MediaAsset, ProductionConfig, SceneDensity, Short, TopicSuggestion, VideoJob } from "../common/types.js";
 import { DEFAULT_VISUAL_PRIORITIES } from "../common/types.js";
 
 export { AirtableClient } from "./client.js";
@@ -58,9 +58,14 @@ export interface VideoFields {
   "Published At"?: string;
   "Retry Count"?: number;
   "Failed Stage"?: string;
+  "Topic Approved"?: boolean;
+  "Opportunity Score"?: number;
+  "Opportunity Rationale"?: string;
+  "Opportunity Sources"?: string;
 }
 
 export const VIDEO_STATUS = {
+  TOPIC_REVIEW: "Topic Review",
   START: "Start",
   SCRIPT_REVIEW: "Script Review",
   GENERATING_ASSETS: "Generating Assets",
@@ -214,5 +219,21 @@ export async function recordShort(
     "Render Path": short.renderPath,
     Status: short.status,
     "Published URL": short.publishedUrl,
+  });
+}
+
+/** Writes one Videos row per suggested topic (TOPIC_MODE=discovery, Sprint 4 opportunity engine), awaiting Topic Approved. */
+export async function recordTopicSuggestion(
+  client: AirtableClient,
+  table: string,
+  suggestion: TopicSuggestion,
+): Promise<void> {
+  await client.createRecord<VideoFields>(table, {
+    Title: suggestion.title,
+    Category: suggestion.category,
+    Status: VIDEO_STATUS.TOPIC_REVIEW,
+    "Opportunity Score": suggestion.opportunityScore,
+    "Opportunity Rationale": suggestion.rationale,
+    "Opportunity Sources": suggestion.sources.join("\n"),
   });
 }

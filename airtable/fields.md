@@ -19,7 +19,7 @@ See `schema.json` in this folder for the exact field list in machine-readable fo
 |---|---|---|
 | Title | Single line text | Primary field. This is what you type in to start a job. |
 | Category | Single select | Options: `financial-crime`, `dark-business`, `mysteries`, `history`, `ai-tech` |
-| Status | Single select | Options: `Start`, `Script Review`, `Generating Assets`, `Narrating`, `Rendering`, `Final Review`, `Published`, `Failed`. Default `Start`. |
+| Status | Single select | Options: `Topic Review`, `Start`, `Script Review`, `Generating Assets`, `Narrating`, `Rendering`, `Final Review`, `Published`, `Failed`. Default `Start`. `Topic Review` only appears on rows the discovery engine creates -- see "Topic discovery" below. |
 | Target Runtime | Number | Target runtime in minutes, e.g. `5` |
 | Script | Long text | Human-readable narration, filled in automatically when `Status` becomes `Script Review` -- read this before approving |
 | Script JSON | Long text | Machine-readable script object; filled in automatically, read back by the orchestrator once approved. Don't edit. |
@@ -70,6 +70,15 @@ See `schema.json` in this folder for the exact field list in machine-readable fo
 | Published At | Date (with time) | |
 | Retry Count | Number | |
 | Failed Stage | Single line text | |
+
+**Topic discovery** (`TOPIC_MODE=discovery` only -- see `docs/API_KEYS.md` for `YOUTUBE_API_KEY`; leave `TOPIC_MODE=manual` and ignore these if you're typing titles in yourself):
+
+| Field | Type | Notes |
+|---|---|---|
+| Topic Approved | Checkbox | Check this on a `Topic Review` row to flip `Status` to `Start` -- hands off to the normal pipeline exactly like a manually-typed title |
+| Opportunity Score | Number | 0-100, set by the discovery engine |
+| Opportunity Rationale | Long text | Plain-language explanation of the score (YouTube view velocity, Reddit engagement, Google Trends) |
+| Opportunity Sources | Long text | Source URLs (newline-separated) the score was based on |
 
 ## Media Assets table
 

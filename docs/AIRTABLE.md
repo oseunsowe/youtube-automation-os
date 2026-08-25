@@ -2,6 +2,8 @@
 
 Airtable is the job queue, production-config panel, and approval dashboard: you create a row, set `Status = Start`, watch the script arrive and approve it, watch the render arrive and approve it, and it publishes to YouTube. It's the only interface the operator needs day to day -- Supabase (once introduced) stays a background data store for competitor datasets/analytics/caching, never something you open to run a job.
 
+With `TOPIC_MODE=discovery` (opt-in, see `docs/API_KEYS.md`), rows can also arrive automatically: the discovery engine creates `Topic Review` rows with a scored, sourced suggestion, and checking `Topic Approved` flips them to `Start` -- same approval-gate pattern as `Script Approved`/`Final Video Approved`, just one step earlier in the pipeline.
+
 For the exact fields, types, and step-by-step base creation instructions, see [`airtable/fields.md`](../airtable/fields.md) and the machine-readable [`airtable/schema.json`](../airtable/schema.json). A filled example row is in [`airtable/sample-data.csv`](../airtable/sample-data.csv).
 
 Four tables: **Videos** (the job queue, production config, and both approval checkboxes), **Media Assets** (source/copyright ledger, one row per downloaded stock asset), **Shorts** (opt-in social repurposing output -- see `docs/N8N.md`), and **Errors** (failure log). Later phases add Channels, Content Ideas, Competitors, Research, Scripts, and Analytics tables (see `TODO.md` §6) — not needed yet.
