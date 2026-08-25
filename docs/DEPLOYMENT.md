@@ -55,6 +55,29 @@ docker compose logs -f    # watch it start; Ctrl+C to stop watching (containers 
 
 `n8n` listens on `5678`, `worker` on `4000`. Both have `restart: unless-stopped`, so they come back after a reboot or crash automatically (Docker's own daemon starts on boot via `systemctl enable docker` above).
 
+### If n8n is deployed separately from this `docker-compose.yml` (e.g. via a panel like Dokploy/Coolify)
+
+The `worker` service's HTTP Request nodes call `http://worker:4000/...` — that hostname only resolves if `n8n` and `worker` are on the **same Docker network**. If you only run `worker` from this file and n8n comes from a different Compose project (its own network, e.g. `<project>_default`), n8n will fail to reach `worker` with a DNS error (`getaddrinfo EAI_AGAIN worker`), even though `worker` itself is up and healthy.
+
+Fix it with a local, uncommitted `docker-compose.override.yml` (already in `.gitignore` — this is VPS-specific, don't commit it) that joins `worker` onto n8n's actual network in addition to its own:
+
+```yaml
+services:
+  worker:
+    networks:
+      default: {}
+      n8n_network:
+        aliases:
+          - worker
+
+networks:
+  n8n_network:
+    name: REPLACE_WITH_YOUR_N8N_NETWORK_NAME   # `docker network ls` to find it
+    external: true
+```
+
+Then `docker compose up -d worker` picks it up automatically -- no manual `docker network connect` needed again after future rebuilds.
+
 ## 6. Put n8n behind HTTPS with a real domain
 
 Running n8n on `http://your-vps-ip:5678` works for testing, but you want HTTPS for anything real (n8n's own security warnings, and cleaner OAuth redirect handling). Point a domain/subdomain (e.g. `n8n.yourdomain.com`) at the VPS's IP, then put a reverse proxy in front:

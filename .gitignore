@@ -11,3 +11,4 @@ renderer/remotion/out/
 .DS_Store
 *.tsbuildinfo
 coverage/
+docker-compose.override.yml

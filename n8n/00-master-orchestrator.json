@@ -51,7 +51,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
           "Status": "Script Review",
           "Script": "={{ $json.scriptText }}",
@@ -67,7 +67,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
           "Status": "Failed",
           "Failed Stage": "script",
@@ -78,7 +78,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B1 Start)",
           "Video/Record": "={{ $('B1 Set Job Vars').item.json.videoId }}",
           "Message": "={{ $json.message }}",
@@ -121,7 +121,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
           "Status": "Narrating",
           "Scene Count": "={{ $json.scenes.length }}"
@@ -135,7 +135,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": { "id": "={{ $('B2 Set Job Vars').item.json.videoId }}", "Status": "Rendering" } }, "options": {} },
+        "columns": { "mappingMode": "defineBelow", "value": { "id": "={{ $('B2 Set Job Vars').item.json.videoId }}", "Status": "Rendering" } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b2n9", "name": "B2 Render Video", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [360, 280], "onError": "continueErrorOutput",
       "parameters": { "method": "POST", "url": "http://worker:4000/render", "sendBody": true, "specifyBody": "json",
@@ -145,7 +145,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
           "Status": "Final Review",
           "Render URL/Path": "={{ $json.outPath }}"
@@ -160,7 +160,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
           "Status": "Failed",
           "Failed Stage": "production",
@@ -171,7 +171,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B2 Production)",
           "Video/Record": "={{ $('B2 Set Job Vars').item.json.videoId }}",
           "Message": "={{ $json.message }}",
@@ -204,7 +204,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
           "Status": "Published",
           "YouTube ID": "={{ $json.youtubeId }}",
@@ -220,7 +220,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
           "Status": "Failed",
           "Failed Stage": "publish",
@@ -231,7 +231,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B3 Publish)",
           "Video/Record": "={{ $('B3 Set Job Vars').item.json.videoId }}",
           "Message": "={{ $json.message }}",
@@ -248,7 +248,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "create",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
-        "columns": { "value": {
+        "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B0 Discovery)",
           "Message": "={{ $json.error || $json.message || 'Unknown error' }}",
           "Timestamp": "={{ $now.toISO() }}",
@@ -269,7 +269,7 @@
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "value": { "id": "={{ $json.id }}", "Status": "Start" } }, "options": {} },
+        "columns": { "mappingMode": "defineBelow", "value": { "id": "={{ $json.id }}", "Status": "Start" } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } }
   ],
   "connections": {
