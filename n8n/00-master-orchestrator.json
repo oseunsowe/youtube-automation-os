@@ -52,7 +52,7 @@
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B1 Set Job Vars').first().json.videoId }}",
           "Status": "Script Review",
           "Script": "={{ $json.scriptText }}",
           "Script JSON": "={{ $json.scriptJson }}"
@@ -68,10 +68,10 @@
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B1 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B1 Set Job Vars').first().json.videoId }}",
           "Status": "Failed",
           "Failed Stage": "script",
-          "Retry Count": "={{ ($('B1 Set Job Vars').item.json.retryCount || 0) + 1 }}"
+          "Retry Count": "={{ ($('B1 Set Job Vars').first().json.retryCount || 0) + 1 }}"
         } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b1e3", "name": "B1 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, -180],
@@ -80,7 +80,7 @@
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
         "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B1 Start)",
-          "Video/Record": "={{ $('B1 Set Job Vars').item.json.videoId }}",
+          "Video/Record": "={{ $('B1 Set Job Vars').first().json.videoId }}",
           "Message": "={{ $json.message }}",
           "Timestamp": "={{ $now.toISO() }}",
           "Resolved": false
@@ -115,38 +115,38 @@
         "options": {} } },
     { "id": "b2n5", "name": "B2 Attach Assets", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-600, 280], "onError": "continueErrorOutput",
       "parameters": { "method": "POST", "url": "http://worker:4000/assets/attach", "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $json.scenes, visualPriorities: $('B2 Set Job Vars').item.json.visualPriorities }) }}",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').first().json.videoId, scenes: $json.scenes, visualPriorities: $('B2 Set Job Vars').first().json.visualPriorities }) }}",
         "options": {} } },
     { "id": "b2n6", "name": "B2 Set Status: Narrating", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B2 Set Job Vars').first().json.videoId }}",
           "Status": "Narrating",
           "Scene Count": "={{ $json.scenes.length }}"
         } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b2n7", "name": "B2 Generate Voice", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [-120, 280], "onError": "continueErrorOutput",
       "parameters": { "method": "POST", "url": "http://worker:4000/voice/generate", "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $('B2 Attach Assets').item.json.scenes, voice: $('B2 Set Job Vars').item.json.voice, voiceProvider: $('B2 Set Job Vars').item.json.voiceProvider }) }}",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').first().json.videoId, scenes: $('B2 Attach Assets').item.json.scenes, voice: $('B2 Set Job Vars').first().json.voice, voiceProvider: $('B2 Set Job Vars').first().json.voiceProvider }) }}",
         "options": {} } },
     { "id": "b2n8", "name": "B2 Set Status: Rendering", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [120, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
-        "columns": { "mappingMode": "defineBelow", "value": { "id": "={{ $('B2 Set Job Vars').item.json.videoId }}", "Status": "Rendering" } }, "options": {} },
+        "columns": { "mappingMode": "defineBelow", "value": { "id": "={{ $('B2 Set Job Vars').first().json.videoId }}", "Status": "Rendering" } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b2n9", "name": "B2 Render Video", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [360, 280], "onError": "continueErrorOutput",
       "parameters": { "method": "POST", "url": "http://worker:4000/render", "sendBody": true, "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').item.json.videoId, scenes: $('B2 Generate Voice').item.json.scenes, engine: $('B2 Set Job Vars').item.json.renderProvider }) }}",
+        "jsonBody": "={{ JSON.stringify({ videoId: $('B2 Set Job Vars').first().json.videoId, scenes: $('B2 Generate Voice').item.json.scenes, engine: $('B2 Set Job Vars').first().json.renderProvider }) }}",
         "options": { "timeout": 1800000 } } },
     { "id": "b2n10", "name": "B2 Set Status: Final Review", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [600, 280],
       "parameters": { "authentication": "airtableTokenApi", "operation": "update",
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B2 Set Job Vars').first().json.videoId }}",
           "Status": "Final Review",
           "Render URL/Path": "={{ $json.outPath }}"
         } }, "options": {} },
@@ -161,10 +161,10 @@
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B2 Set Job Vars').first().json.videoId }}",
           "Status": "Failed",
           "Failed Stage": "production",
-          "Retry Count": "={{ ($('B2 Set Job Vars').item.json.retryCount || 0) + 1 }}"
+          "Retry Count": "={{ ($('B2 Set Job Vars').first().json.retryCount || 0) + 1 }}"
         } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b2e3", "name": "B2 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 560],
@@ -173,7 +173,7 @@
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
         "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B2 Production)",
-          "Video/Record": "={{ $('B2 Set Job Vars').item.json.videoId }}",
+          "Video/Record": "={{ $('B2 Set Job Vars').first().json.videoId }}",
           "Message": "={{ $json.message }}",
           "Timestamp": "={{ $now.toISO() }}",
           "Resolved": false
@@ -205,7 +205,7 @@
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B3 Set Job Vars').first().json.videoId }}",
           "Status": "Published",
           "YouTube ID": "={{ $json.youtubeId }}",
           "Published At": "={{ $now.toISO() }}"
@@ -221,10 +221,10 @@
         "base": { "__rl": true, "mode": "id", "value": "appwi5mdMlyLbFFFw" },
         "table": { "__rl": true, "mode": "name", "value": "Videos" },
         "columns": { "mappingMode": "defineBelow", "value": {
-          "id": "={{ $('B3 Set Job Vars').item.json.videoId }}",
+          "id": "={{ $('B3 Set Job Vars').first().json.videoId }}",
           "Status": "Failed",
           "Failed Stage": "publish",
-          "Retry Count": "={{ ($('B3 Set Job Vars').item.json.retryCount || 0) + 1 }}"
+          "Retry Count": "={{ ($('B3 Set Job Vars').first().json.retryCount || 0) + 1 }}"
         } }, "options": {} },
       "credentials": { "airtableTokenApi": { "id": "REPLACE", "name": "Airtable account" } } },
     { "id": "b3e3", "name": "B3 Log Error", "type": "n8n-nodes-base.airtable", "typeVersion": 2.1, "position": [-360, 1120],
@@ -233,7 +233,7 @@
         "table": { "__rl": true, "mode": "name", "value": "Errors" },
         "columns": { "mappingMode": "defineBelow", "value": {
           "Workflow": "00 - Master Orchestrator (B3 Publish)",
-          "Video/Record": "={{ $('B3 Set Job Vars').item.json.videoId }}",
+          "Video/Record": "={{ $('B3 Set Job Vars').first().json.videoId }}",
           "Message": "={{ $json.message }}",
           "Timestamp": "={{ $now.toISO() }}",
           "Resolved": false
